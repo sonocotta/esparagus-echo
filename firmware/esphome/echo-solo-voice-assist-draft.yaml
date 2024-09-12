@@ -1,0 +1,357 @@
+substitutions:
+  name: esphome-web-019708
+  friendly_name: esparagus-solo-01
+  ## Preferred wake word, choose from: https://github.com/esphome/micro-wake-word-models/tree/main/models
+  # github://esphome/micro-wake-word-models/models/okay_nabu.json
+  wake_word: okay_nabu
+  ## Set the buildt in speaker volume percentage to prevent it from distorting
+  speaker_volume: 50%
+  ## Phases of the Voice Assistant
+  ## IDLE: The voice assistant is ready to be triggered by a wake-word
+  voice_assist_idle_phase_id: '1'
+  ## LISTENING: The voice assistant is ready to listen to a voice command (after being triggered by the wake word)
+  voice_assist_listening_phase_id: '2'
+  ## THINKING: The voice assistant is currently processing the command
+  voice_assist_thinking_phase_id: '3'
+  ## REPLYING: The voice assistant is replying to the command
+  voice_assist_replying_phase_id: '4'
+  ## NOT_READY: The voice assistant is not ready
+  voice_assist_not_ready_phase_id: '10'
+  ## ERROR: The voice assistant encountered an error
+  voice_assist_error_phase_id: '11'
+  ## MUTED: The voice assistant is muted and will not reply to a wake-word
+  voice_assist_muted_phase_id: '12'
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: false
+  project:
+    name: esphome.web
+    version: '1.0'
+  min_version: 2024.7.0
+  platformio_options:
+    build_flags: -DBOARD_HAS_PSRAM
+    board_build.flash_mode: dio
+    board_upload.maximum_size: 16777216
+  on_boot:
+    priority: 200.0
+    then:
+      - media_player.volume_set:
+          id: adf_media_player
+          volume: ${speaker_volume}
+      - switch.turn_on:
+          id: speaker_switch 
+      - delay: 30s
+      - if:
+          condition:
+            lambda: return id(init_in_progress);
+          then:
+            - lambda: id(init_in_progress) = false;
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: ESP32S3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+    version: 4.4.6 
+    sdkconfig_options:
+      CONFIG_ESP32_S3_BOX_BOARD: "y"
+      CONFIG_ESP32_WIFI_STATIC_RX_BUFFER_NUM: "16"
+      CONFIG_ESP32_WIFI_DYNAMIC_RX_BUFFER_NUM: "512"
+      CONFIG_TCPIP_RECVMBOX_SIZE: "512"
+
+      CONFIG_TCP_SND_BUF_DEFAULT: "65535"
+      CONFIG_TCP_WND_DEFAULT: "512000"
+      CONFIG_TCP_RECVMBOX_SIZE: "512"
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/gnumpi/esphome_audio
+      ref: dev-next
+    components: [ adf_pipeline, i2s_audio ]
+    refresh: 0s
+
+# Enable logging
+logger:
+  level: DEBUG
+  
+# Enable Home Assistant API
+api:
+
+# Allow Over-The-Air updates
+ota:
+  platform: esphome
+  password: !secret esphome_ota_password
+
+wifi:
+  ssid: !secret esphome_wifi_ssid
+  password: !secret esphome_wifi_password
+  ap:
+    ssid: "$name Hotspot"
+    password: !secret esphome_ap_password
+
+captive_portal:
+
+globals:
+  - id: init_in_progress
+    type: bool
+    restore_value: no
+    initial_value: 'true'
+  - id: voice_assistant_phase
+    type: int
+    restore_value: no
+    initial_value: ${voice_assist_not_ready_phase_id}
+
+button:
+  - platform: restart
+    id: restart_btn
+    name: "${friendly_name} REBOOT"
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+i2s_audio:
+  - id: i2s
+    i2s_lrclk_pin: GPIO15
+    i2s_bclk_pin: GPIO14
+
+adf_pipeline:
+  - platform: i2s_audio
+    type: audio_out
+    id: adf_i2s_out
+    i2s_audio_id: i2s
+    i2s_dout_pin: GPIO16
+
+  - platform: i2s_audio
+    type: audio_in
+    id: adf_i2s_in
+    i2s_audio_id: i2s
+    i2s_din_pin: GPIO21
+    pdm: false
+    channel: right
+    sample_rate: 16000
+    bits_per_sample: 32bit
+
+microphone:
+  - platform: adf_pipeline
+    id: adf_microphone
+    keep_pipeline_alive: true
+    pipeline:
+      - adf_i2s_in
+      - self
+
+media_player:
+  - platform: adf_pipeline
+    id: adf_media_player
+    name: "${friendly_name} Media Player"
+    keep_pipeline_alive: true
+    internal: false
+    pipeline:
+      - self
+      - resampler
+      - adf_i2s_out
+
+light:
+  - platform: esp32_rmt_led_strip
+    id: rgb_front_led
+    name: "${friendly_name} Front LED"
+    rgb_order: GRB
+    pin: GPIO42
+    num_leds: 2
+    rmt_channel: 1
+    chipset: ws2812
+    default_transition_length: 0s
+    effects:
+      - addressable_color_wipe:
+          name: "Connecting"
+          colors:
+            - red: 60%
+              green: 60%
+              blue: 60%
+              num_leds: 1
+            - red: 60%
+              green: 60%
+              blue: 0%
+              num_leds: 1
+          add_led_interval: 100ms
+          reverse: true
+      - pulse:
+          name: "Fast Pulse"
+          transition_length: 100ms
+          update_interval: 100ms
+          min_brightness: 50%
+          max_brightness: 100%
+      - pulse:
+          name: "Slow Pulse"
+          transition_length: 250ms
+          update_interval: 250ms
+          min_brightness: 50%
+          max_brightness: 100%
+
+micro_wake_word:
+  models:
+    - model: ${wake_word}
+  on_wake_word_detected:
+      - media_player.stop:
+      - light.turn_on:
+          id: rgb_front_led
+          blue: 0%
+          red: 0%
+          green: 100%
+          brightness: 75%
+          effect: "Slow Pulse"
+      - voice_assistant.start:
+
+voice_assistant:
+  microphone: adf_microphone
+  media_player: adf_media_player
+  use_wake_word: false
+  #vad_threshold: 3
+  #noise_suppression_level: 1
+  auto_gain: 31dBFS
+  #volume_multiplier: 15.0
+  on_client_connected:
+    - lambda: id(init_in_progress) = false;
+    - if:
+        condition:
+          switch.is_on: use_wake_word
+        then:
+          - micro_wake_word.start:
+          - lambda: id(voice_assistant_phase) = ${voice_assist_idle_phase_id};
+          - script.execute: reset_led
+        else:
+          - lambda: id(voice_assistant_phase) = ${voice_assist_muted_phase_id};
+  on_client_disconnected:
+    - lambda: id(voice_assistant_phase) = ${voice_assist_not_ready_phase_id};
+    - voice_assistant.stop
+    - micro_wake_word.stop
+    - light.turn_on:
+          id: rgb_front_led
+          blue: 0%
+          red: 100%
+          green: 100%
+          brightness: 50%
+          effect: connecting
+  on_listening:
+    - light.turn_on:
+        id: rgb_front_led
+        blue: 100%
+        red: 0%
+        green: 0%
+        brightness: 50%
+        effect: "Slow Pulse"
+  on_tts_start:
+    - light.turn_on:
+        id: rgb_front_led
+        blue: 0%
+        red: 0%
+        green: 100%
+        brightness: 50%
+        effect: "Slow Pulse"
+  on_end:
+      then:
+        - light.turn_off:
+            id: rgb_front_led
+        - voice_assistant.stop
+        - wait_until:
+            not:
+              media_player.is_playing:
+        - script.execute: reset_led
+        - if:
+            condition:
+              switch.is_on: use_wake_word
+            then:
+              - micro_wake_word.start:
+  on_error:
+    - light.turn_on:
+        id: rgb_front_led
+        blue: 0%
+        red: 100%
+        green: 0%
+        brightness: 100%
+        effect: none
+    - delay: 1s
+    - script.execute: reset_led
+    - script.wait: reset_led
+    - lambda: |-
+        if (code == "wake-provider-missing" || code == "wake-engine-missing") {
+          id(use_wake_word).turn_off();
+        }
+    - if:
+        condition:
+          switch.is_on: use_wake_word
+        then:
+          - micro_wake_word.start:
+          - script.execute: reset_led
+
+script:
+  - id: reset_led
+    then:
+      - if:
+          condition:
+            switch.is_on: use_wake_word
+          then:
+            - light.turn_on:
+                id: rgb_front_led
+                blue: 100%
+                red: 0%
+                green: 0%
+                brightness: 25%
+                effect: none
+          else:
+            - light.turn_off: rgb_front_led
+
+switch:
+  - platform: gpio
+    id: speaker_switch
+    icon: "mdi:speaker"
+    pin:
+      number: GPIO17
+  - platform: template
+    name: Enable Voice Assistant
+    id: use_wake_word
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    icon: mdi:assistant
+    ## When the switch is turned on (on Home Assistant):
+    ## Start the voice assistant component
+    ## Set the correct phase and run the script to refresh the LED status
+    on_turn_on:
+      - logger.log: "switch on"
+      - if:
+          condition:
+            lambda: return !id(init_in_progress);
+          then:
+            - logger.log: "condition 1"
+            - lambda: id(voice_assistant_phase) = ${voice_assist_idle_phase_id};
+            - voice_assistant.stop
+            - delay: 1s
+            - if:
+                condition:
+                  not:
+                    - voice_assistant.is_running
+                then:
+                  - logger.log: "Starting micro wake word"
+                  - micro_wake_word.start:
+      - script.execute: reset_led
+    on_turn_off:
+      - if:
+          condition:
+            lambda: return !id(init_in_progress);
+          then:
+            - voice_assistant.stop
+            - micro_wake_word.stop
+            - lambda: id(voice_assistant_phase) = ${voice_assist_muted_phase_id};
+      - script.execute: reset_led
+
+  - platform: template
+    name: "${friendly_name} Pipeline"
+    id: pipeline_switch
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    on_turn_off:
+      - media_player.stop
