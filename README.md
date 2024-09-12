@@ -15,7 +15,23 @@ Esparagus Echo is a series of two ESP32-S3-based voice control edge devices. The
 
 ## Table of Contents
 
-{table}
+- [Esparagus Echo](#esparagus-echo)
+  - [Table of Contents](#table-of-contents)
+  - [Why Esparagus](#why-esparagus)
+  - [Motivation](#motivation)
+  - [Esparagus Solo](#esparagus-solo)
+  - [Esparagus Duo](#esparagus-duo)
+  - [Features](#features)
+  - [Boards Pinout](#boards-pinout)
+    - [Peripheral - Common](#peripheral---common)
+    - [Peripheral - W5500 Ethernet](#peripheral---w5500-ethernet)
+  - [Software](#software)
+    - [Home Assistant - media player](#home-assistant---media-player)
+    - [Home Assistant - voice assistant](#home-assistant---voice-assistant)
+  - [Hardware](#hardware)
+    - [Boxed](#boxed)
+    - [PCB](#pcb)
+  - [Where to buy](#where-to-buy)
 
 ## Why Esparagus
 
@@ -60,8 +76,8 @@ On top of Solo capabilities, Esparagus Duo uses a dual Mic setup, extra LED, and
 
 |       | I2S CLK | I2S DOUT | I2S DIN | I2S WS | DAC CE | RGB LED
 |-------|---------|----------|--------|----------|-----------|-----------|
-| Echo Solo | 14      | 16       | 21     | 15       | 17        |  36
-| Echo Duo | 14     | 16       | 21     | 15       | 17        | 36
+| Echo Solo | 14      | 16       | 21     | 15       | 17        |  42
+| Echo Duo | 14     | 16       | 21     | 15       | 17        | 42
 
 
 ### Peripheral - W5500 Ethernet
@@ -76,7 +92,11 @@ Since both devices are designed to be primarily used within the Home Assistant s
 - `media-player` is a simple external speaker based on the Arduino framework
 - `voice-assistans` is a work-in-progress configuration based on esp-adf pipeline and wake-word detection. 
 
-### Configuring Home Assistant
+### Home Assistant - media player
+
+TODO
+
+### Home Assistant - voice assistant
 
 I will update this section as soon as I get the VA part working.
 
@@ -90,7 +110,6 @@ Please visit [hardware](/hardware/) section for board schematics and PCB designs
 |---|---|
 | ![image](https://github.com/user-attachments/assets/b650bccd-84e5-4a5e-81ac-86187e45e2ef) | ![image](https://github.com/user-attachments/assets/fe4e7137-e51a-4827-b44d-3520adf3159f) 
 | ![image](https://github.com/user-attachments/assets/ad078714-8822-4c29-ad7d-3a537a74fca6) | ![image](https://github.com/user-attachments/assets/5e5fd427-333e-4336-872e-6a40ef548f83)
-
 
 
 ### PCB
