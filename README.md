@@ -57,7 +57,7 @@ On top of Solo capabilities, Esparagus Duo uses a dual Mic setup, extra LED, and
 
 |  | Esparagus Solo | Esparagus Duo |
 |---|---|---|
-| Image | {image} | {image} |
+| Image | ![DSC_0005](https://github.com/user-attachments/assets/0c7a3872-1665-4b49-9259-094bfd1093a2) | ![DSC_0031_1](https://github.com/user-attachments/assets/41ad38e8-0865-44ec-84eb-abcd57f629fa) |
 | MCU | ESP32-S3-WROOM-1-N16R8 module | ESP32-S3-WROOM-1U-N16R8 module |
 | MIC | Single [TDK InvenSense ICS-43434](https://invensense.tdk.com/products/ics-43434/) I2S MEMS Mic | Dual [TDK InvenSense ICS-43434](https://invensense.tdk.com/products/ics-43434/) I2S MEMS Mic |
 | DAC | Single I2S DAC ([MAX98357](https://www.analog.com/en/products/max98357a.html)) with built-in D-Class amp | Dual I2S DAC ([MAX98357](https://www.analog.com/en/products/max98357a.html)) with built-in D-Class amp |
