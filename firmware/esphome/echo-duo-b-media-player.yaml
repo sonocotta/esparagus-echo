@@ -1,0 +1,172 @@
+substitutions:
+  name: esphome-web-32fb44
+  friendly_name: esparagus-duo-B01
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  project:
+    name: esphome.web
+    version: '1.0'
+  on_boot:
+    priority: 800
+    then:
+    - media_player.volume_set:
+        id: esparagus_duo
+        volume: 70%
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: ESP32S3
+  flash_size: 16MB
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+  level: DEBUG
+  
+# Enable Home Assistant API
+api:
+
+# Allow Over-The-Air updates
+ota:
+  platform: esphome
+  password: !secret esphome_ota_password
+
+wifi:
+  ssid: !secret esphome_wifi_ssid
+  password: !secret esphome_wifi_password
+  ap:
+    ssid: "$name Hotspot"
+    password: !secret esphome_ap_password
+
+captive_portal:
+
+# uncomment to use ethernet instead of wifi
+
+# ethernet:
+#   type: W5500
+#   clk_pin: GPIO12
+#   mosi_pin: GPIO11
+#   miso_pin: GPIO13
+#   cs_pin: GPIO10
+#   interrupt_pin: GPIO6
+#   reset_pin: GPIO5
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+i2s_audio:
+  - id: i2s_in
+    i2s_lrclk_pin: GPIO7 
+    i2s_bclk_pin: GPIO16
+  - id: i2s_out
+    i2s_lrclk_pin: GPIO8
+    i2s_bclk_pin: GPIO18
+
+switch:
+  - platform: gpio
+    id: speaker_switch
+    icon: "mdi:speaker"
+    pin:
+      number: GPIO9
+
+media_player:
+  - platform: i2s_audio
+    i2s_audio_id: i2s_out
+    name: $friendly_name
+    id: esparagus_duo
+    dac_type: external
+    i2s_dout_pin: GPIO17
+    mode: stereo
+    on_announcement:
+      - logger.log: "Announcement started"
+      - switch.turn_on:
+          id: speaker_switch
+      - light.turn_on:
+          id: rgb_front_led
+          blue: 100%
+          red: 0%
+          green: 100%
+          brightness: 50%
+          effect: "Fast Pulse"
+    on_play:
+      - logger.log: "Playback started"
+      - switch.turn_on:
+          id: speaker_switch 
+      - light.turn_on:
+          id: rgb_front_led
+          blue: 100%
+          red: 0%
+          green: 100%
+          brightness: 50%
+          effect: "Slow Pulse"
+    on_pause:
+      - logger.log: "Playback paused"
+      - light.turn_on:
+          id: rgb_front_led
+          blue: 100%
+          red: 0%
+          green: 100%
+          brightness: 25%
+    on_idle:
+      - logger.log: "Playback ended"
+      - switch.turn_off:
+          id: speaker_switch
+      - light.turn_off:
+          id: rgb_front_led
+
+microphone:
+  - platform: i2s_audio
+    id: external_mic
+    i2s_audio_id: i2s_in
+    adc_type: external
+    i2s_din_pin: GPIO15
+    pdm: false
+    channel: right
+    sample_rate: 16000
+    bits_per_sample: 32bit
+
+button:
+  - platform: restart
+    id: restart_btn
+    name: "${friendly_name} REBOOT"
+
+light:
+  - platform: esp32_rmt_led_strip
+    id: rgb_front_led
+    name: "${friendly_name} Front LED"
+    rgb_order: GRB
+    pin: GPIO42
+    num_leds: 3
+    rmt_channel: 1
+    chipset: ws2812
+    default_transition_length: 0s
+    effects:
+      - addressable_color_wipe:
+          name: "Connecting"
+          colors:
+            - red: 60%
+              green: 60%
+              blue: 60%
+              num_leds: 1
+            - red: 60%
+              green: 60%
+              blue: 0%
+              num_leds: 1
+          add_led_interval: 100ms
+          reverse: true
+      - pulse:
+          name: "Fast Pulse"
+          transition_length: 100ms
+          update_interval: 100ms
+          min_brightness: 50%
+          max_brightness: 100%
+      - pulse:
+          name: "Slow Pulse"
+          transition_length: 1000ms
+          update_interval: 1000ms
+          min_brightness: 50%
+          max_brightness: 100%
