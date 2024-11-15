@@ -125,7 +125,7 @@ ESPHome however was not collaborating, so I decided to go with hardware fix and 
 
 All in all, wakeword started to work in revision B, and although it is not as fast as say Alexa, it is truly amazing to have it working on such a small device. 
 
-Please look at [this config](/firmware/esphome/echo-duo-b-voice-assist.yaml) to make it work. Note that it will also require to conifgure Home Assistant properly, you may use [this official guide](https://www.home-assistant.io/voice_control/) or community created [Youtube tutorial](https://www.youtube.com/watch?v=VAFDgib95Ls)
+Please look at [this config](/firmware/esphome/echo-duo-b-voice-assist.yaml) to make it work. Note that it will also require to conifgure Home Assistant properly, you may use [this official guide](https://www.home-assistant.io/voice_control/), [Seeeds docs](https://wiki.seeedstudio.com/respeaker_lite_ha/) or community created [Youtube tutorial](https://www.youtube.com/watch?v=VAFDgib95Ls)
 
 ## Hardware
 
