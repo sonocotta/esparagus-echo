@@ -24,6 +24,8 @@ Esparagus Echo is a series of two ESP32-S3-based voice control edge devices. The
   - [Features](#features)
   - [Boards Pinout](#boards-pinout)
     - [Peripheral - Common](#peripheral---common)
+      - [Rev A (test samples)](#rev-a-test-samples)
+      - [Rev B (distribution)](#rev-b-distribution)
     - [Peripheral - W5500 Ethernet](#peripheral---w5500-ethernet)
   - [Software](#software)
     - [Home Assistant - media player](#home-assistant---media-player)
@@ -74,10 +76,19 @@ On top of Solo capabilities, Esparagus Duo uses a dual Mic setup, extra LED, and
 
 ### Peripheral - Common
 
-|       | I2S CLK | I2S DOUT | I2S DIN | I2S WS | DAC CE | RGB LED
-|-------|---------|----------|--------|----------|-----------|-----------|
-| Echo Solo | 14      | 16       | 21     | 15       | 17        |  42
-| Echo Duo | 14     | 16       | 21     | 15       | 17        | 42
+#### Rev A (test samples)
+
+|           | I2S CLK | I2S DOUT | I2S DIN | I2S WS   | DAC CE    | RGB LED
+|-----------|---------|----------|---------|----------|-----------|-----------|
+| Echo Solo | 14      | 16       | 21      | 15       | 17        |  42
+| Echo Duo  | 14      | 16       | 21      | 15       | 17        |  42
+
+#### Rev B (distribution)
+
+|           | I2S CLK (OUT) | I2S DATA (OUT) | I2S WS (OUT) | I2S CLK (IN) | I2S DATA (IN) | I2S WS (IN) | DAC CE | RGB LED |
+|-----------|---------------|----------------|--------------|--------------|---------------|-------------|--------|---------|
+| Echo Solo | 18            | 17             | 8            | 16           | 15            | 7           |  9     |  42     |
+| Echo Duo  | 18            | 17             | 8            | 16           | 15            | 7           |  9     |  42     |
 
 
 ### Peripheral - W5500 Ethernet
@@ -94,7 +105,7 @@ Since both devices are designed to be primarily used within the Home Assistant s
 
 ### Home Assistant - media player
 
-One simple way Esparagus Echo can be used in the Home Assistant is a media player device. [Yaml config](/firmware/esphome) will get you started. Below are configuration steps that you need to do in the HA itself.
+One simple way that Esparagus Echo can be used in the Home Assistant is by using a media player device. [Yaml config](/firmware/esphome) will get you started. Below are the configuration steps that you need to do in the HA itself.
 
 | Step | Screenshot |
 |------|------------|
@@ -108,7 +119,13 @@ One simple way Esparagus Echo can be used in the Home Assistant is a media playe
 
 ### Home Assistant - voice assistant
 
-I will update this section as soon as I get the VA part working.
+Originally I had an issue configuring the voice-assistant setup on the echo, despite having good examples shared [here](https://github.com/esphome/firmware/blob/main/voice-assistant) and [here](https://github.com/HA-TB303/ultimatesensor_mini/). The reason for the examples to fail was a single I2S bus handling both audio input and output. In theory, this is a perfectly good configuration, since both DACs and both MICs work in slave mode as they should, and I even made a simple Arduino code that captures frames from MIC and sends them over to the Speakers in stereo mode, working beautifully. 
+
+ESPHome however was not collaborating, so I decided to go with a hardware fix and use extra pins to run independent I2S buses for both MICs and DACs. Note that currently [wakeword](https://www.home-assistant.io/voice_control/install_wake_word_add_on/) does not benefit from the second MIC, but I hope support will be added in the future since Espressiff folks seem to work on that (although they may use external noise-reduction IC, I'm not sure). 
+
+All in all, wakeword started to work in revision B, and although it is not as fast as say, Alexa, it is truly amazing to have it working on such a small device. 
+
+Please look at [this config](/firmware/esphome/echo-duo-b-voice-assist.yaml) to make it work. Note that it will also require to configure Home Assistant properly, you may use [this official guide](https://www.home-assistant.io/voice_control/), [Seeeds docs](https://wiki.seeedstudio.com/respeaker_lite_ha/) or community created [Youtube tutorial](https://www.youtube.com/watch?v=VAFDgib95Ls)
 
 ## Hardware
 
@@ -130,4 +147,4 @@ Please visit [hardware](/hardware/) section for board schematics and PCB designs
 
 ## Where to buy
 
-You may support our work by ordering this product at Tindie (soming soon)
+You may support our work by ordering this product at Tindie (coming soon)
