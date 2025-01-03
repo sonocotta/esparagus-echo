@@ -8,7 +8,7 @@
 
 [![Dev Chat](https://img.shields.io/discord/1233306441469657140?logo=discord&label=discord&style=flat-square)](https://discord.gg/PtnaAaQMpS)
 
-![DSC_0030](https://github.com/user-attachments/assets/04c4431e-0fea-4343-88dc-d94e5a4eb2f3)
+![DSC_0102](https://github.com/user-attachments/assets/84f3732c-cb69-4689-89ab-f31cbbc4554e)
 
 Esparagus Echo is a series of two ESP32-S3-based voice control edge devices. They are designed to work with [ESPHome](https://esphome.io) as an edge part of the voice control pipeline. Both devices are enclosed in a neat-looking aluminum case and expose feedback LEDs on the front panel where it is easy to spot them, leaving power and speaker connectors on the backside. 
 
@@ -45,9 +45,9 @@ I'm a big fan of Alexa. I'm using it around the house, and my family is using it
 
 ## Esparagus Solo
 
-Esparagus Solo has all the basic necessities, a Mic on the front panel, a couple of feedback LEDs, and a speaker at the back. Onboard is a simple and well-known MAX98357 DAC with a reasonable 5W of output audio. It uses a built-in antenna for simplicity. And that's pretty much it.
+Esparagus Solo has all the basic necessities, a Mic on the front panel, a couple of feedback LEDs, and a speaker at the back. Onboard is a simple and well-known MAX98357 DAC with a reasonable 5W output audio. That's pretty much it.
 
-![DSC_0006](https://github.com/user-attachments/assets/bd787b14-6c00-425d-862a-a078a345e4b0)
+![DSC_0108](https://github.com/user-attachments/assets/b4957751-f71e-4a23-b3bd-ac48bdb77a90)
 
 ## Esparagus Duo
 
@@ -59,7 +59,7 @@ On top of Solo capabilities, Esparagus Duo uses a dual Mic setup, extra LED, and
 
 |  | Esparagus Solo | Esparagus Duo |
 |---|---|---|
-| Image | ![DSC_0005](https://github.com/user-attachments/assets/0c7a3872-1665-4b49-9259-094bfd1093a2) | ![DSC_0031_1](https://github.com/user-attachments/assets/41ad38e8-0865-44ec-84eb-abcd57f629fa) |
+| Image | ![DSC_0108](https://github.com/user-attachments/assets/b4957751-f71e-4a23-b3bd-ac48bdb77a90) | ![DSC_0015](https://github.com/user-attachments/assets/fa25aedf-96f9-48c8-bf72-99b5bf84d71a) |
 | MCU | ESP32-S3-WROOM-1-N16R8 module | ESP32-S3-WROOM-1U-N16R8 module |
 | MIC | Single [TDK InvenSense ICS-43434](https://invensense.tdk.com/products/ics-43434/) I2S MEMS Mic | Dual [TDK InvenSense ICS-43434](https://invensense.tdk.com/products/ics-43434/) I2S MEMS Mic |
 | DAC | Single I2S DAC ([MAX98357](https://www.analog.com/en/products/max98357a.html)) with built-in D-Class amp | Dual I2S DAC ([MAX98357](https://www.analog.com/en/products/max98357a.html)) with built-in D-Class amp |
@@ -68,7 +68,7 @@ On top of Solo capabilities, Esparagus Duo uses a dual Mic setup, extra LED, and
 | Output, 8Ω | 5W | 2x 5W |
 | PSRAM | 8MB PSRAM | 8MB PSRAM |
 | Peripheral | 2x XL1615 RGB LED | 3x XL1615 RGB LED |
-| Wireless Connectivity | WiFi + BLE | WiFi + BLE |
+| Wireless Connectivity | WiFi + BLE <br/> External antenna | WiFi + BLE <br/> External antenna |
 | Ethernet | none | Wizznet W5500 SPI Ethernet |
 | Size (excl. antenna) | 45 x 18 x 52mm | 70 x 24 x 88 mm |
 
@@ -101,7 +101,7 @@ On top of Solo capabilities, Esparagus Duo uses a dual Mic setup, extra LED, and
 
 Since both devices are designed to be primarily used within the Home Assistant setup, the [software](/firmware) folder contains ESPHome configurations for both devices.
 - `media-player` is a simple external speaker based on the Arduino framework
-- `voice-assistans` is a work-in-progress configuration based on esp-adf pipeline and wake-word detection. 
+- `voice-assistans` is a configuration based on esp-adf pipeline and wake-word detection. 
 
 ### Home Assistant - media player
 
@@ -123,9 +123,22 @@ Originally I had an issue configuring the voice-assistant setup on the echo, des
 
 ESPHome however was not collaborating, so I decided to go with a hardware fix and use extra pins to run independent I2S buses for both MICs and DACs. Note that currently [wakeword](https://www.home-assistant.io/voice_control/install_wake_word_add_on/) does not benefit from the second MIC, but I hope support will be added in the future since Espressiff folks seem to work on that (although they may use external noise-reduction IC, I'm not sure). 
 
-All in all, wakeword started to work in revision B, and although it is not as fast as say, Alexa, it is truly amazing to have it working on such a small device. 
+All in all, wakeword started to work flawlessly in revision B, and although it is not as fast as say, Alexa, it is truly amazing to have it working on such a small device. 
 
 Please look at [this config](/firmware/esphome/echo-duo-b-voice-assist.yaml) to make it work. Note that it will also require to configure Home Assistant properly, you may use [this official guide](https://www.home-assistant.io/voice_control/), [Seeeds docs](https://wiki.seeedstudio.com/respeaker_lite_ha/) or community created [Youtube tutorial](https://www.youtube.com/watch?v=VAFDgib95Ls)
+
+### ESPHome - initial flashing
+
+The ESP32-S3 has a special routine to flash initial ESPHome firmware, which was very optional on the classic ESP32. It requires a bit more work to perform the initial flashing of the ESPHome firmware.
+
+| Step | Image |
+|------|------------|
+| Open the device box and connect it to the PC for initial flashing. <br/>  It will report itself as a USB device, but it is not able to go into flashing mode on its own. <br/> While device is powered on, while keeping the FLASH button pressed, press the RESET button, and release the FLASH button. |  ![image](https://github.com/user-attachments/assets/c3258763-b290-4d73-89ed-57f2edcb158f)
+| Only after that, connect to the device from the [web.esphome.io](https://web.esphome.io/) | ![image](https://github.com/user-attachments/assets/0a89316b-dba2-4f93-afa7-6752fb050ac2)
+| You may press the REPARE FOR FIRST USE button as usual. | ![image](https://github.com/user-attachments/assets/02387a81-f2be-4218-8278-66c373fbacc8)
+| You will be greeted with `An error occurred. Improv Wi-Fi Serial not detected` error. That's because the device is not able to RESET over USB during the first flashing. Reset it manually using RESET button | ![image](https://github.com/user-attachments/assets/f0d037ba-9c2a-4318-bb28-1fc752c83234)
+| Re-connect to the device again and proceed with initial WIFI configuration | ![image](https://github.com/user-attachments/assets/8bcc6291-dece-4ec7-ae3b-695bf3444308)
+
 
 ## Hardware
 
@@ -133,18 +146,20 @@ Please visit [hardware](/hardware/) section for board schematics and PCB designs
 
 ### Boxed
 
-| Esparagus Solo  | Esparagus Duo  | 
-|---|---|
-| ![image](https://github.com/user-attachments/assets/b650bccd-84e5-4a5e-81ac-86187e45e2ef) | ![image](https://github.com/user-attachments/assets/fe4e7137-e51a-4827-b44d-3520adf3159f) 
-| ![image](https://github.com/user-attachments/assets/ad078714-8822-4c29-ad7d-3a537a74fca6) | ![image](https://github.com/user-attachments/assets/5e5fd427-333e-4336-872e-6a40ef548f83)
+
+| Esparagus Solo (Prototype) | Esparagus Solo | Esparagus Duo  | 
+|---|---|---|
+| ![image](https://github.com/user-attachments/assets/b650bccd-84e5-4a5e-81ac-86187e45e2ef) | ![image](https://github.com/user-attachments/assets/9cae5e9d-4d7e-48bd-a289-85b84be51282) | ![image](https://github.com/user-attachments/assets/fe4e7137-e51a-4827-b44d-3520adf3159f) 
+| ![image](https://github.com/user-attachments/assets/ad078714-8822-4c29-ad7d-3a537a74fca6) | ![image](https://github.com/user-attachments/assets/de751a1a-3c80-434c-8a80-8177ae99a032) | ![image](https://github.com/user-attachments/assets/5e5fd427-333e-4336-872e-6a40ef548f83)
 
 
 ### PCB
 
-| Esparagus Solo  | Esparagus Duo  | 
-|---|---|
-| ![image](https://github.com/user-attachments/assets/761b231c-c5f4-4479-b12b-1be4ae2b4831) | ![image](https://github.com/user-attachments/assets/9561e312-61d7-4463-8947-f37b56da8db0)
+| Esparagus Solo (Prototype) | Esparagus Solo | Esparagus Duo  | 
+|---|---|---|
+| ![image](https://github.com/user-attachments/assets/761b231c-c5f4-4479-b12b-1be4ae2b4831) | ![image](https://github.com/user-attachments/assets/60ff9542-6a02-4ac6-8828-350baf6fede7) | ![image](https://github.com/user-attachments/assets/9561e312-61d7-4463-8947-f37b56da8db0)
 
 ## Where to buy
 
 You may support our work by ordering this product at [Tindie](https://www.tindie.com/products/sonocotta/esparagus-echo/)
+
