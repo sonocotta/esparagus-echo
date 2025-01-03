@@ -24,12 +24,13 @@ Esparagus Echo is a series of two ESP32-S3-based voice control edge devices. The
   - [Features](#features)
   - [Boards Pinout](#boards-pinout)
     - [Peripheral - Common](#peripheral---common)
-      - [Rev A (test samples)](#rev-a-test-samples)
+      - [Rev A (prototypes)](#rev-a-prototypes)
       - [Rev B (distribution)](#rev-b-distribution)
     - [Peripheral - W5500 Ethernet](#peripheral---w5500-ethernet)
   - [Software](#software)
     - [Home Assistant - media player](#home-assistant---media-player)
     - [Home Assistant - voice assistant](#home-assistant---voice-assistant)
+    - [ESPHome - initial flashing](#esphome---initial-flashing)
   - [Hardware](#hardware)
     - [Boxed](#boxed)
     - [PCB](#pcb)
@@ -76,7 +77,7 @@ On top of Solo capabilities, Esparagus Duo uses a dual Mic setup, extra LED, and
 
 ### Peripheral - Common
 
-#### Rev A (test samples)
+#### Rev A (prototypes)
 
 |           | I2S CLK | I2S DOUT | I2S DIN | I2S WS   | DAC CE    | RGB LED
 |-----------|---------|----------|---------|----------|-----------|-----------|
