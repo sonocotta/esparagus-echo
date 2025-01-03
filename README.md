@@ -71,7 +71,7 @@ On top of Solo capabilities, Esparagus Duo uses a dual Mic setup, extra LED, and
 | Peripheral | 2x XL1615 RGB LED | 3x XL1615 RGB LED |
 | Wireless Connectivity | WiFi + BLE <br/> External antenna | WiFi + BLE <br/> External antenna |
 | Ethernet | none | Wizznet W5500 SPI Ethernet |
-| Size (excl. antenna) | 45 x 18 x 52mm | 70 x 24 x 88 mm |
+| Size (excl. antenna) | 70 x 24 x 88 mm | 70 x 24 x 88 mm |
 
 ## Boards Pinout
 
