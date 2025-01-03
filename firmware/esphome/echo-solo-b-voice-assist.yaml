@@ -1,6 +1,6 @@
 substitutions:
-  name: esphome-web-019708
-  friendly_name: esparagus-solo-01
+  name: esphome-web-a86af8
+  friendly_name: esparagus-solo-B02
   ## Preferred wake word, choose from: https://github.com/esphome/micro-wake-word-models/tree/main/models
   # github://esphome/micro-wake-word-models/models/okay_nabu.json
   wake_word: okay_nabu
@@ -55,7 +55,7 @@ esp32:
   flash_size: 16MB
   framework:
     type: esp-idf
-    version: 4.4.6 
+    version: 4.4.6
     sdkconfig_options:
       CONFIG_ESP32_S3_BOX_BOARD: "y"
       CONFIG_ESP32_WIFI_STATIC_RX_BUFFER_NUM: "16"
@@ -115,22 +115,25 @@ psram:
   speed: 80MHz
 
 i2s_audio:
-  - id: i2s
-    i2s_lrclk_pin: GPIO15
-    i2s_bclk_pin: GPIO14
-
+  - id: i2s_in
+    i2s_lrclk_pin: GPIO7 
+    i2s_bclk_pin: GPIO16
+  - id: i2s_out
+    i2s_lrclk_pin: GPIO8
+    i2s_bclk_pin: GPIO18
+    
 adf_pipeline:
   - platform: i2s_audio
     type: audio_out
     id: adf_i2s_out
-    i2s_audio_id: i2s
-    i2s_dout_pin: GPIO16
+    i2s_audio_id: i2s_out
+    i2s_dout_pin: GPIO17
 
   - platform: i2s_audio
     type: audio_in
     id: adf_i2s_in
-    i2s_audio_id: i2s
-    i2s_din_pin: GPIO21
+    i2s_audio_id: i2s_in
+    i2s_din_pin: GPIO15
     pdm: false
     channel: right
     sample_rate: 16000
@@ -310,7 +313,7 @@ switch:
     id: speaker_switch
     icon: "mdi:speaker"
     pin:
-      number: GPIO17
+      number: GPIO9
   - platform: template
     name: Enable Voice Assistant
     id: use_wake_word

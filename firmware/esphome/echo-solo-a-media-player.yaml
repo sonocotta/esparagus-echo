@@ -7,7 +7,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: esphome.web
-    version: '1.0  
+    version: '1.0'
   platformio_options:
     build_flags: "-DBOARD_HAS_PSRAM"
     board_build.arduino.memory_type: qio_opi
@@ -51,22 +51,27 @@ psram:
   speed: 80MHz
 
 i2s_audio:
-    i2s_lrclk_pin: GPIO15
-    i2s_bclk_pin: GPIO14
+  - id: i2s_in
+    i2s_lrclk_pin: GPIO7 
+    i2s_bclk_pin: GPIO16
+  - id: i2s_out
+    i2s_lrclk_pin: GPIO8
+    i2s_bclk_pin: GPIO18
 
 switch:
   - platform: gpio
     id: speaker_switch
     icon: "mdi:speaker"
     pin:
-      number: GPIO17
+      number: GPIO9
 
 media_player:
   - platform: i2s_audio
+    i2s_audio_id: i2s_out
     name: $friendly_name
     id: esparagus_solo
     dac_type: external
-    i2s_dout_pin: GPIO16
+    i2s_dout_pin: GPIO17
     mode: mono
     on_announcement:
       - logger.log: "Announcement started"
@@ -109,8 +114,9 @@ media_player:
 microphone:
   - platform: i2s_audio
     id: external_mic
+    i2s_audio_id: i2s_in
     adc_type: external
-    i2s_din_pin: GPIO21
+    i2s_din_pin: GPIO15
     pdm: false
     channel: right
     sample_rate: 16000
