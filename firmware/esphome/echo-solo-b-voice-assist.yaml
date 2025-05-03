@@ -29,7 +29,7 @@ esphome:
   project:
     name: esphome.web
     version: '1.0'
-  min_version: 2024.7.0
+  min_version: 2025.4.1
   platformio_options:
     build_flags: -DBOARD_HAS_PSRAM
     board_build.flash_mode: dio
