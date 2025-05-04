@@ -272,7 +272,6 @@ micro_wake_word:
                       switch.is_off: ducking_switch
                     then:
                       media_player.stop:
-                        announcement: true
                 - if:
                     condition:
                       voice_assistant.is_running:
