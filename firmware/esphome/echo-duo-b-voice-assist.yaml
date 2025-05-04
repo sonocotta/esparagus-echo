@@ -269,6 +269,12 @@ micro_wake_word:
               else:
                 - if:
                     condition:
+                      switch.is_off: ducking_switch
+                    then:
+                      media_player.stop:
+                        announcement: true
+                - if:
+                    condition:
                       voice_assistant.is_running:
                     then:
                       voice_assistant.stop:
