@@ -497,13 +497,6 @@ switch:
             - lambda: id(voice_assistant_phase) = ${voice_assist_muted_phase_id};
       - script.execute: reset_led
 
-  - platform: template
-    name: "${friendly_name} Pipeline"
-    id: pipeline_switch
-    optimistic: true
-    restore_mode: RESTORE_DEFAULT_OFF
-    on_turn_off:
-      - media_player.stop
 
   - platform: template
     name: "Enable ducking"
