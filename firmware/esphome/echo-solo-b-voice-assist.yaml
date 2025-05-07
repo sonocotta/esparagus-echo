@@ -143,7 +143,7 @@ speaker:
   - platform: mixer
     id: mixing_speaker
     output_speaker: i2s_audio_speaker
-    num_channels: 2
+    num_channels: 1
     source_speakers:
       - id: announcement_mixing_input
         timeout: never
@@ -176,7 +176,7 @@ media_player:
     media_pipeline:
       speaker: media_resampling_speaker
       format: FLAC     # FLAC is the least processor intensive codec
-      num_channels: 2
+      num_channels: 1
       sample_rate: 48000
     on_announcement:
       - mixer_speaker.apply_ducking:
