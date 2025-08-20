@@ -21,6 +21,7 @@ Esparagus Echo is a series of two ESP32-S3-based voice control edge devices. The
   - [Motivation](#motivation)
   - [Esparagus Solo](#esparagus-solo)
   - [Esparagus Duo](#esparagus-duo)
+  - [Which device is right for me](#which-device-is-right-for-me)
   - [Features](#features)
   - [Boards Pinout](#boards-pinout)
     - [Peripheral - Common](#peripheral---common)
@@ -55,6 +56,10 @@ Esparagus Solo has all the basic necessities, a Mic on the front panel, a couple
 On top of Solo capabilities, Esparagus Duo uses a dual Mic setup, extra LED, and most importantly 2-channels MAX98357 channels to deliver quality stereo-audio (and thus can be used as a media player device). To make sure it would stream audio without a hiccup it uses an external Wifi antenna (much-improved perception) and has SPI Ethernet for the most robust networking. 
 
 ![DSC_0015](https://github.com/user-attachments/assets/fa25aedf-96f9-48c8-bf72-99b5bf84d71a)
+
+## Which device is right for me
+
+<img width="1047" height="1112" alt="Esparagus Lineup-Device Select Map (ESP32) drawio (1)" src="https://github.com/user-attachments/assets/79e9bcd5-f621-416e-8a61-c49d2770f2e1" />
 
 ## Features
 
