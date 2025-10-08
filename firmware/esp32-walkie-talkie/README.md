@@ -5,7 +5,9 @@ This is a clone of the [esp32-walkie-talkie](https://github.com/atomic14/esp32-w
 - Added Echo specific pinout
 - Added WS2812 LED implementation
 
-It is developed and tested on the Esparagus Echo. You need to use I0/FLASH button for transmit, which is hidden inside the case, so it is mostly used outside case at the moment. 
+It is developed and tested on the Esparagus Echo. You need to use I0/FLASH button for transmission, which is hidden inside the case, so it is mostly used outside the case at the moment. 
+
+<img width="1141" height="626" alt="image" src="https://github.com/user-attachments/assets/dafdaf42-119c-476d-aafd-0a953a570ba6" />
 
 # Overview
 
