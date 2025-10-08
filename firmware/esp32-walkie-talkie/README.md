@@ -1,6 +1,8 @@
 # NB
 
-This is a clone of the [esp32-walkie-talkie](https://github.com/atomic14/esp32-walkie-talkie) project by atomic14. What I did on top
+This is a clone of the [esp32-walkie-talkie](https://github.com/atomic14/esp32-walkie-talkie) project by atomic14.
+
+What I did on top:
 - Added ESP32-S3 configuration
 - Added Echo specific pinout
 - Added WS2812 LED implementation
