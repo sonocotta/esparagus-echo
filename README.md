@@ -32,6 +32,7 @@ Esparagus Echo is a series of two ESP32-S3-based voice control edge devices. The
     - [Home Assistant - media player](#home-assistant---media-player)
     - [Home Assistant - voice assistant](#home-assistant---voice-assistant)
     - [ESPHome - initial flashing](#esphome---initial-flashing)
+    - [Walkie Talkie firmware](#walkie-talkie-firmware)
   - [Hardware](#hardware)
     - [Boxed](#boxed)
     - [PCB](#pcb)
@@ -135,7 +136,7 @@ Please look at [this config](/firmware/esphome/echo-duo-b-voice-assist.yaml) to 
 
 ### ESPHome - initial flashing
 
-The ESP32-S3 has a special routine to flash initial ESPHome firmware, which was very optional on the classic ESP32. It requires a bit more work to perform the initial flashing of the ESPHome firmware.
+The ESP32-S3 has a special routine to flash initial ESPHome firmware, which was very optional on the classic ESP32. It requires a bit more work to perform the initial flashing of the ESPHome firmware. 
 
 | Step | Image |
 |------|------------|
@@ -145,6 +146,10 @@ The ESP32-S3 has a special routine to flash initial ESPHome firmware, which was 
 | You will be greeted with `An error occurred. Improv Wi-Fi Serial not detected` error. That's because the device is not able to RESET over USB during the first flashing. Reset it manually using RESET button | ![image](https://github.com/user-attachments/assets/f0d037ba-9c2a-4318-bb28-1fc752c83234)
 | Re-connect to the device again and proceed with initial WIFI configuration | ![image](https://github.com/user-attachments/assets/8bcc6291-dece-4ec7-ae3b-695bf3444308)
 
+### Walkie Talkie firmware
+
+Alternative firmware that uses ESPNOW protocol (based on UDP packets) for bi-directional communication over Wifi. This is a clone of the [esp32-walkie-talkie](https://github.com/atomic14/esp32-walkie-talkie) project by atomic14. 
+More details [here](/firmware/esp32-walkie-talkie/)  
 
 ## Hardware
 
