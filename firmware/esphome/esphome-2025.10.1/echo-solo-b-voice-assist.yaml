@@ -1,0 +1,534 @@
+# ESPHome 2025.10.2
+
+substitutions:
+  name: esparagus-solo
+  friendly_name: "Esparagus Solo"
+  wake_word: okay_nabu
+  speaker_volume: 60%  # Increased from 50%
+  voice_assist_idle_phase_id: '1'
+  voice_assist_listening_phase_id: '2'
+  voice_assist_thinking_phase_id: '3'
+  voice_assist_replying_phase_id: '4'
+  voice_assist_not_ready_phase_id: '10'
+  voice_assist_error_phase_id: '11'
+  voice_assist_muted_phase_id: '12'
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: false
+  min_version: 2025.10.2
+  platformio_options:
+    build_flags: -DBOARD_HAS_PSRAM
+    board_build.flash_mode: dio
+    board_upload.maximum_size: 16777216
+  on_boot:
+    priority: 200.0
+    then:
+      - media_player.volume_set:
+          id: voice_assistant_media_player
+          volume: ${speaker_volume}
+      - switch.turn_on:
+          id: speaker_switch 
+      - delay: 30s
+      - if:
+          condition:
+            lambda: return id(init_in_progress);
+          then:
+            - lambda: id(init_in_progress) = false;
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: ESP32S3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_ESP32_S3_BOX_BOARD: "y"
+      # OPTIMIZED WiFi buffers for streaming
+      CONFIG_ESP32_WIFI_STATIC_RX_BUFFER_NUM: "16"
+      CONFIG_ESP32_WIFI_DYNAMIC_RX_BUFFER_NUM: "32"
+      CONFIG_TCPIP_RECVMBOX_SIZE: "512"
+      CONFIG_TCP_SND_BUF_DEFAULT: "65535"
+      CONFIG_TCP_WND_DEFAULT: "512000"
+      CONFIG_TCP_RECVMBOX_SIZE: "512"
+      # Audio priority
+      CONFIG_FREERTOS_UNICORE: "n"
+      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "10"
+
+logger:
+  level: INFO  # Changed from DEBUG to reduce overhead
+
+api:
+
+ota:
+  platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "${name} Hotspot"
+
+captive_portal:
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+globals:
+  - id: init_in_progress
+    type: bool
+    restore_value: no
+    initial_value: 'true'
+  - id: voice_assistant_phase
+    type: int
+    restore_value: no
+    initial_value: ${voice_assist_not_ready_phase_id}
+
+# Correct I2S configuration
+i2s_audio:
+  - id: i2s_in
+    i2s_lrclk_pin: GPIO7 
+    i2s_bclk_pin: GPIO16
+  - id: i2s_out
+    i2s_lrclk_pin: GPIO8
+    i2s_bclk_pin: GPIO18
+
+microphone:
+  - platform: i2s_audio
+    adc_type: external
+    id: voice_assistant_mic
+    i2s_audio_id: i2s_in
+    i2s_din_pin: GPIO15
+    pdm: false
+    channel: right
+    sample_rate: 16000
+    bits_per_sample: 32bit
+    use_apll: true              # Better clock accuracy
+    i2s_mode: primary
+# OPTIMIZED speaker configuration
+speaker:
+  - platform: i2s_audio
+    id: i2s_audio_speaker
+    i2s_audio_id: i2s_out
+    i2s_dout_pin: GPIO17
+    dac_type: external
+    channel: mono
+    i2s_mode: primary
+    buffer_duration: 500ms     # INCREASED from 100ms (reduces glitches)
+    timeout: never
+    sample_rate: 48000
+    bits_per_sample: 16bit      # Keep at 32bit for quality
+
+
+  - platform: mixer
+    id: mixing_speaker
+    output_speaker: i2s_audio_speaker
+    num_channels: 1
+    source_speakers:
+      - id: announcement_mixing_input
+        timeout: never
+      - id: media_mixing_input
+        timeout: never
+
+  # OPTIMIZED resamplers - 32bit for better quality
+  - platform: resampler
+    id: announcement_resampling_speaker
+    output_speaker: announcement_mixing_input
+    sample_rate: 48000
+    bits_per_sample: 16        # Changed from 16 to 32
+  - platform: resampler
+    id: media_resampling_speaker
+    output_speaker: media_mixing_input
+    sample_rate: 48000
+    bits_per_sample: 16        # Changed from 16 to 32
+
+
+
+media_player:
+  - platform: speaker
+    id: voice_assistant_media_player
+    name: "${friendly_name} Media Player"
+    internal: false
+    announcement_pipeline:
+      speaker: announcement_resampling_speaker
+      format: WAV                # Changed from FLAC (less CPU)
+      num_channels: 1
+      sample_rate: 48000
+    media_pipeline:
+      speaker: media_resampling_speaker
+      format: WAV                # Changed from FLAC (less CPU)
+      num_channels: 1
+      sample_rate: 48000
+    buffer_size: 2000000         # INCREASED buffer (2MB vs default 1MB)
+    task_stack_in_psram: true    # Use PSRAM for audio tasks
+    on_announcement:
+      - mixer_speaker.apply_ducking:
+          id: media_mixing_input
+          decibel_reduction: 20
+          duration: 0.0s
+    on_state:
+      if:
+        condition:
+          and:
+            - switch.is_off: timer_ringing
+            - not:
+                voice_assistant.is_running:
+            - not:
+                media_player.is_announcing:
+        then:
+          - mixer_speaker.apply_ducking:
+              id: media_mixing_input
+              decibel_reduction: 0
+              duration: 1.0s
+    files:
+    - id: timer_finished_sound
+      file: https://github.com/esphome/home-assistant-voice-pe/raw/dev/sounds/timer_finished.flac
+    - id: wake_word_triggered_sound
+      file: https://github.com/esphome/home-assistant-voice-pe/raw/dev/sounds/wake_word_triggered.flac
+
+light:
+  - platform: esp32_rmt_led_strip
+    id: rgb_front_led
+    name: "${friendly_name} Front LED"
+    rgb_order: GRB
+    pin: GPIO42
+    num_leds: 2
+    rmt_symbols: 96
+    chipset: ws2812
+    default_transition_length: 0s
+    effects:
+      - addressable_color_wipe:
+          name: "Connecting"
+          colors:
+            - red: 60%
+              green: 60%
+              blue: 60%
+              num_leds: 1
+            - red: 60%
+              green: 60%
+              blue: 0%
+              num_leds: 1
+          add_led_interval: 100ms
+          reverse: true
+      - pulse:
+          name: "Fast Pulse"
+          transition_length: 100ms
+          update_interval: 100ms
+          min_brightness: 50%
+          max_brightness: 100%
+      - pulse:
+          name: "Slow Pulse"
+          transition_length: 250ms
+          update_interval: 250ms
+          min_brightness: 50%
+          max_brightness: 100%
+
+micro_wake_word:
+  id: mww
+  models:
+    - model: ${wake_word}
+  microphone: voice_assistant_mic
+  on_wake_word_detected:
+    - if:
+        condition:
+          switch.is_on: use_wake_word
+        then:
+          - light.turn_on:
+              id: rgb_front_led
+              blue: 0%
+              red: 0%
+              green: 100%
+              brightness: 75%
+              effect: "Slow Pulse"
+          - if:
+              condition:
+                switch.is_on: timer_ringing
+              then:
+                - switch.turn_off: timer_ringing
+                - micro_wake_word.start:
+              else:
+                - if:
+                    condition:
+                      switch.is_off: ducking_switch
+                    then:
+                      media_player.stop:
+                - if:
+                    condition:
+                      voice_assistant.is_running:
+                    then:
+                      voice_assistant.stop:
+                    else:
+                      - if:
+                          condition:
+                            media_player.is_announcing:
+                          then:
+                            - media_player.stop:
+                                announcement: true
+                          else:
+                            - if:
+                                condition:
+                                  switch.is_on: wake_sound
+                                then:
+                                  - script.execute:
+                                      id: play_sound
+                                      priority: true
+                                      sound_file: !lambda return id(wake_word_triggered_sound);
+                                  - delay: 300ms
+                            - voice_assistant.start:
+
+voice_assistant:
+  id: va
+  microphone: voice_assistant_mic
+  media_player: voice_assistant_media_player
+  use_wake_word: false
+  auto_gain: 31dBFS
+  on_client_connected:
+    - lambda: id(init_in_progress) = false;
+    - if:
+        condition:
+          switch.is_on: use_wake_word
+        then:
+          - micro_wake_word.start:
+          - lambda: id(voice_assistant_phase) = ${voice_assist_idle_phase_id};
+          - script.execute: reset_led
+        else:
+          - lambda: id(voice_assistant_phase) = ${voice_assist_muted_phase_id};
+  on_client_disconnected:
+    - lambda: id(voice_assistant_phase) = ${voice_assist_not_ready_phase_id};
+    - voice_assistant.stop
+    - micro_wake_word.stop
+    - light.turn_on:
+          id: rgb_front_led
+          blue: 0%
+          red: 100%
+          green: 100%
+          brightness: 50%
+          effect: connecting
+  on_listening:
+    - light.turn_on:
+        id: rgb_front_led
+        blue: 100%
+        red: 0%
+        green: 0%
+        brightness: 50%
+        effect: "Slow Pulse"
+  on_tts_start:
+    - light.turn_on:
+        id: rgb_front_led
+        blue: 0%
+        red: 0%
+        green: 100%
+        brightness: 50%
+        effect: "Slow Pulse"
+  on_start:
+    - mixer_speaker.apply_ducking:
+        id: media_mixing_input
+        decibel_reduction: 20
+        duration: 0.0s
+  on_end:
+      then:
+        - wait_until:
+            not:
+              voice_assistant.is_running:
+        - mixer_speaker.apply_ducking:
+            id: media_mixing_input
+            decibel_reduction: 0
+            duration: 1.0s
+        - light.turn_off:
+            id: rgb_front_led
+        - voice_assistant.stop
+        - script.execute: reset_led
+        - if:
+            condition:
+              switch.is_on: use_wake_word
+            then:
+              - micro_wake_word.start:
+  on_error:
+    - light.turn_on:
+        id: rgb_front_led
+        blue: 0%
+        red: 100%
+        green: 0%
+        brightness: 100%
+        effect: none
+    - delay: 1s
+    - script.execute: reset_led
+    - script.wait: reset_led
+    - lambda: |-
+        if (code == "wake-provider-missing" || code == "wake-engine-missing") {
+          id(use_wake_word).turn_off();
+        }
+    - if:
+        condition:
+          switch.is_on: use_wake_word
+        then:
+          - micro_wake_word.start:
+          - script.execute: reset_led
+  on_timer_finished:
+    - switch.turn_on: timer_ringing
+
+script:
+  - id: reset_led
+    then:
+      - if:
+          condition:
+            switch.is_on: use_wake_word
+          then:
+            - light.turn_on:
+                id: rgb_front_led
+                blue: 100%
+                red: 0%
+                green: 0%
+                brightness: 25%
+                effect: none
+          else:
+            - light.turn_off: rgb_front_led
+  - id: play_sound
+    parameters:
+      priority: bool
+      sound_file: "audio::AudioFile*"
+    then:
+      - lambda: |-
+          if (priority) {
+            id(voice_assistant_media_player)
+              ->make_call()
+              .set_command(media_player::MediaPlayerCommand::MEDIA_PLAYER_COMMAND_STOP)
+              .set_announcement(true)
+              .perform();
+          }
+          if ( (id(voice_assistant_media_player).state != media_player::MediaPlayerState::MEDIA_PLAYER_STATE_ANNOUNCING ) || priority) {
+            id(voice_assistant_media_player)
+              ->play_file(sound_file, true, false);
+          }
+  - id: enable_repeat_one
+    then:
+      - lambda: |-
+            id(voice_assistant_media_player)
+              ->make_call()
+              .set_command(media_player::MediaPlayerCommand::MEDIA_PLAYER_COMMAND_REPEAT_ONE)
+              .set_announcement(true)
+              .perform();
+            id(voice_assistant_media_player)->set_playlist_delay_ms(speaker::AudioPipelineType::ANNOUNCEMENT, 500);
+  - id: ring_timer
+    then:
+      - script.execute: enable_repeat_one
+      - script.execute:
+          id: play_sound
+          priority: true
+          sound_file: !lambda return id(timer_finished_sound);
+  - id: disable_repeat
+    then:
+      - lambda: |-
+            id(voice_assistant_media_player)
+              ->make_call()
+              .set_command(media_player::MediaPlayerCommand::MEDIA_PLAYER_COMMAND_REPEAT_OFF)
+              .set_announcement(true)
+              .perform();
+            id(voice_assistant_media_player)->set_playlist_delay_ms(speaker::AudioPipelineType::ANNOUNCEMENT, 0);
+
+switch:
+  - platform: gpio
+    id: speaker_switch
+    icon: "mdi:speaker"
+    pin:
+      number: GPIO9
+  - platform: template
+    name: "${friendly_name} Enable Voice Assistant"
+    id: use_wake_word
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    icon: mdi:assistant
+    on_turn_on:
+      - logger.log: "switch on"
+      - if:
+          condition:
+            lambda: return !id(init_in_progress);
+          then:
+            - logger.log: "condition 1"
+            - lambda: id(voice_assistant_phase) = ${voice_assist_idle_phase_id};
+            - voice_assistant.stop
+            - delay: 1s
+            - if:
+                condition:
+                  not:
+                    - voice_assistant.is_running
+                then:
+                  - logger.log: "Starting micro wake word"
+                  - micro_wake_word.start:
+      - script.execute: reset_led
+    on_turn_off:
+      - if:
+          condition:
+            lambda: return !id(init_in_progress);
+          then:
+            - voice_assistant.stop
+            - micro_wake_word.stop
+            - lambda: id(voice_assistant_phase) = ${voice_assist_muted_phase_id};
+      - script.execute: reset_led
+  - platform: template
+    name: "${friendly_name} Enable Ducking"
+    id: ducking_switch
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    icon: mdi:volume-high
+  - platform: template
+    id: timer_ringing
+    optimistic: true
+    internal: true
+    restore_mode: ALWAYS_OFF
+    on_turn_on:
+      - mixer_speaker.apply_ducking:
+          id: media_mixing_input
+          decibel_reduction: 20
+          duration: 0.0s
+      - script.execute: ring_timer
+      - light.turn_on:
+          id: rgb_front_led
+          blue: 0%
+          red: 0%
+          green: 100%
+          brightness: 85%
+          effect: "Fast Pulse"
+      - delay: 15min
+      - switch.turn_off: timer_ringing
+    on_turn_off:
+      - script.execute: disable_repeat
+      - if:
+          condition:
+            media_player.is_announcing:
+          then:
+            media_player.stop:
+              announcement: true
+      - mixer_speaker.apply_ducking:
+          id: media_mixing_input
+          decibel_reduction: 0
+          duration: 1.0s
+      - script.execute: reset_led
+  - platform: template
+    id: wake_sound
+    name: "${friendly_name} Wake Sound"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    icon: "mdi:bullhorn"
+
+button:
+  - platform: restart
+    id: restart_btn
+    name: "${friendly_name} REBOOT"
+
+sensor:
+  - platform: wifi_signal
+    name: "${friendly_name} WiFi Signal"
+    update_interval: 60s
+  - platform: uptime
+    name: "${friendly_name} Uptime"
+    update_interval: 60s
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "${friendly_name} IP Address"
+  - platform: version
+    name: "${friendly_name} ESPHome Version"
