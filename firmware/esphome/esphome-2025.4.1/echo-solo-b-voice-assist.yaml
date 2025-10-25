@@ -1,6 +1,6 @@
 substitutions:
   name: esphome-web-a86af8
-  friendly_name: esparagus-solo-B02
+  friendly_name: esparagus-solo
   ## Preferred wake word, choose from: https://github.com/esphome/micro-wake-word-models/tree/main/models
   # github://esphome/micro-wake-word-models/models/okay_nabu.json
   wake_word: okay_nabu
