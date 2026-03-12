@@ -7,12 +7,12 @@ on:
     paths:
       - 'firmware/esphome/**'
       - '.github/workflows/build-esphome.yml'
-      - '!firmware/esphome/packages-archive/**'
+      - '!firmware/esphome/archive/**'
   pull_request:
     paths:
       - 'firmware/esphome/**'
       - '.github/workflows/build-esphome.yml'
-      - '!firmware/esphome/packages-archive/**'
+      - '!firmware/esphome/archive/**'
 
 jobs:
   prepare:
@@ -28,7 +28,7 @@ jobs:
         run: |
           configs=$(find firmware/esphome -maxdepth 2 -name "*.yaml" -type f \
             | grep -v "/packages/" \
-            | grep -v "/packages-archive/" \
+            | grep -v "/archive/" \
             | grep -v "/secrets/" \
             | grep -v "secrets.yaml" \
             | jq -R -s -c 'split("\n")[:-1]')

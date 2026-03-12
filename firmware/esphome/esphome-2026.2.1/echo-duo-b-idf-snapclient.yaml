@@ -9,6 +9,9 @@
 # Board-specific pinouts defined in substitutions
 # Functional blocks imported from /packages
 # ============================================================
+
+# !Requires EspHome (Dev) to build at the moment
+
 substitutions:
   name: esphome-web-a87b38
   friendly_name: Esparagus-Echo-Duo
@@ -50,7 +53,7 @@ substitutions:
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
-  min_version: 2026.1.4
+  min_version: 2026.2.1
   name_add_mac_suffix: false
   platformio_options:
     board_build.flash_mode: dio
