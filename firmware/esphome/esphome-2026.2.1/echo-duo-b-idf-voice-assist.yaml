@@ -121,9 +121,19 @@ packages:
       # Optional ethernet (replace wifi config if you use this, you need to exclude OLED package if you do this to free up SPI bus)
       # - firmware/esphome/packages/ethernet-w5500.yaml
 
-  # # Debug/local development fallback:
-  audio: !include packages/audio.yaml
-  microphone: !include packages/microphone.yaml
+  esparagus_echo:
+    url: https://github.com/sonocotta/esparagus-echo
+    ref: main
+    files:
+      - firmware/esphome/packages/audio.yaml
+      - firmware/esphome/packages/microphone.yaml
+      - firmware/esphome/packages/voice-assist.yaml
+      - firmware/esphome/packages/voice-assist-addon-dac-enable.yaml
+      - firmware/esphome/packages/voice-assist-media-player.yaml
 
-  media_player: !include packages/voice-assist-media-player.yaml
-  voice_assistant: !include packages/voice-assist.yaml
+  # # Debug/local development fallback:
+  # audio: !include packages/audio.yaml
+  # microphone: !include packages/microphone.yaml
+
+  # media_player: !include packages/voice-assist-media-player.yaml
+  # voice_assistant: !include packages/voice-assist.yaml

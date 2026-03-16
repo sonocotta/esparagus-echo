@@ -17,8 +17,6 @@ esphome:
       - media_player.volume_set:
           id: voice_assistant_media_player
           volume: ${speaker_volume}
-      - switch.turn_on:
-          id: enable_dac 
       - delay: 30s
       - if:
           condition:

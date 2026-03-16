@@ -1,0 +1,15 @@
+
+# ============================================================
+# Voice Assist - External DAC addon
+# ============================================================
+# Extends voice-assist.yaml to attach an external DAC component
+# to the existing I2S speaker.
+# Dependencies: voice-assist.yaml
+# ============================================================
+
+esphome:
+  on_boot:
+    priority: 220.0
+    then:
+      - switch.turn_on:
+          id: enable_dac 
