@@ -98,6 +98,11 @@ packages:
       - firmware/esphome/packages/monitoring.yaml
       - firmware/esphome/packages/monitoring-wifi.yaml
 
+  esparagus_echo:
+    url: https://github.com/sonocotta/esparagus-echo
+    ref: main
+      - firmware/esphome/packages/microphone.yaml
+
     # # Debug/local development fallback:
-  microphone: !include packages/microphone.yaml
+  # microphone: !include packages/microphone.yaml
 
