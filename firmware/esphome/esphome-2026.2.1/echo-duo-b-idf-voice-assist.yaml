@@ -124,12 +124,13 @@ packages:
   esparagus_echo:
     url: https://github.com/sonocotta/esparagus-echo
     ref: main
+    files:
       - firmware/esphome/packages/audio.yaml
       - firmware/esphome/packages/microphone.yaml
       - firmware/esphome/packages/voice-assist.yaml
       - firmware/esphome/packages/voice-assist-addon-dac-enable.yaml
       - firmware/esphome/packages/voice-assist-media-player.yaml
-      
+
   # # Debug/local development fallback:
   # audio: !include packages/audio.yaml
   # microphone: !include packages/microphone.yaml

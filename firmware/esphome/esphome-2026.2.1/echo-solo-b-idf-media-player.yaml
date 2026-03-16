@@ -101,6 +101,7 @@ packages:
   esparagus_echo:
     url: https://github.com/sonocotta/esparagus-echo
     ref: main
+    files:
       - firmware/esphome/packages/microphone.yaml
 
     # # Debug/local development fallback:
