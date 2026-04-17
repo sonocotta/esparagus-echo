@@ -98,7 +98,7 @@ packages:
     ref: main
     files:
       # Basic implementation without DSP controls, but with playback events (DAC_EN hook)
-      - firmware/esphome/packages/snapclient-newer.yaml
+      - firmware/esphome/packages/snapclient-new.yaml
       - firmware/esphome/packages/dac-switch.yaml
       - firmware/esphome/packages/snapclient-addon-dac-enable.yaml
 
