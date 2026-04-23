@@ -1,10 +1,6 @@
 # Esparagus Echo
 
-![Open Source Hardware](/images/open-source-hardware-logo.png)
-![Open Source Software](/images/open-source-software-logo.png)
-
-<a href="https://www.tindie.com/stores/sonocotta/?ref=offsite_badges&utm_source=sellers_andrey-malyshenko&utm_medium=badges&utm_campaign=badge_medium"><img src="https://d2ss6ovg47m0r5.cloudfront.net/badges/tindie-mediums.png" alt="I sell on Tindie" width="150" height="78"></a>
-<br />
+<a href="https://lectronz.com/stores/sonocotta" alt="I sell on Lectronz"><img src="https://lectronz-images.b-cdn.net/static/badges/i-sell-on-lectronz-medium.png" /></a><a href="https://www.tindie.com/stores/sonocotta/?ref=offsite_badges&utm_source=sellers_andrey-malyshenko&utm_medium=badges&utm_campaign=badge_medium"><img src="https://d2ss6ovg47m0r5.cloudfront.net/badges/tindie-mediums.png" alt="I sell on Tindie" width="150" height="78"></a>
 
 [![Dev Chat](https://img.shields.io/discord/1233306441469657140?logo=discord&label=discord&style=flat-square)](https://discord.gg/PtnaAaQMpS)
 
@@ -172,5 +168,5 @@ Please visit [hardware](/hardware/) section for board schematics and PCB designs
 
 ## Where to buy
 
-You may support our work by ordering this product at [Tindie](https://www.tindie.com/products/sonocotta/esparagus-echo/)
+You may support our work by ordering this product at [Lectronz](https://lectronz.com/products/esparagus-echo) and [Tindie](https://www.tindie.com/products/sonocotta/esparagus-echo/)
 
