@@ -124,6 +124,7 @@ packages:
       - firmware/esphome/packages/microphone.yaml
       - firmware/esphome/packages/audio.yaml
       - firmware/esphome/packages/media-player.yaml
+      - firmware/esphome/packages/media-player-addon-voice-assist.yaml
       - firmware/esphome/packages/voice-assist.yaml
       # - firmware/esphome/packages/voice-assist-addon-dac-enable.yaml
 
