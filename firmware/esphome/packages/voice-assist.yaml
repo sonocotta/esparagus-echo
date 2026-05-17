@@ -1,6 +1,7 @@
 substitutions:
   # Voice Assistant Configuration
   wake_word: okay_nabu
+  media_player_led_control: "false"  # disable media-player LED control; voice-assist manages LEDs
   speaker_volume: 60%
   voice_assist_idle_phase_id: '1'
   voice_assist_listening_phase_id: '2'
