@@ -45,7 +45,7 @@ substitutions:
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
-  min_version: 2026.2.1
+  min_version: 2026.5.0
   name_add_mac_suffix: false
   platformio_options:
     board_build.flash_mode: dio
@@ -98,14 +98,22 @@ packages:
     url: https://github.com/sonocotta/esparagus-media-center
     ref: main
     files:
-      # Basic implementation without DSP controls, but with playback events (DAC_EN hook)
       - firmware/esphome/packages/dac-switch.yaml
-      - firmware/esphome/packages/sendspin-audio.yaml
-      - firmware/esphome/packages/sendspin.yaml
-      - firmware/esphome/packages/sendspin-addon-dac-enable.yaml
-
+      - firmware/esphome/packages/light-x.yaml
       - firmware/esphome/packages/monitoring.yaml
       - firmware/esphome/packages/monitoring-wifi.yaml
-      - firmware/esphome/packages/light-x.yaml
       # Optional ethernet (replace wifi config if you use this, you need to exclude OLED package if you do this to free up SPI bus)
       # - firmware/esphome/packages/ethernet-w5500.yaml
+
+
+  # esparagus_echo:
+  #   url: https://github.com/sonocotta/esparagus-echo
+  #   ref: main
+  #   files:
+      # - firmware/esphome/packages/sendspin-audio.yaml
+      # - firmware/esphome/packages/sendspin.yaml
+      # - firmware/esphome/packages/sendspin-addon-dac-enable.yaml
+
+  audio: !include packages/audio.yaml
+  sendspin: !include packages/sendspin.yaml
+  sendspin_addon_dac_enable: !include packages/sendspin-addon-dac-enable.yaml

@@ -10,8 +10,8 @@
 # ============================================================
 
 substitutions:
-  name: esphome-web-a87b38
-  friendly_name: Esparagus-Echo-Duo
+  name: esphome-web-a86afc
+  friendly_name: Esparagus-Echo-Solo
   task_stack_in_psram: "true"
 
   # ===== Board-Specific Pinouts =====
@@ -90,20 +90,22 @@ packages:
     url: https://github.com/sonocotta/esparagus-media-center
     ref: main
     files:
-      - firmware/esphome/packages/audio.yaml
       - firmware/esphome/packages/dac-switch.yaml
-      - firmware/esphome/packages/media-player.yaml
-      - firmware/esphome/packages/media-player-addon-dac-enable.yaml
       - firmware/esphome/packages/light-x.yaml
       - firmware/esphome/packages/monitoring.yaml
       - firmware/esphome/packages/monitoring-wifi.yaml
 
-  esparagus_echo:
-    url: https://github.com/sonocotta/esparagus-echo
-    ref: main
-    files:
-      - firmware/esphome/packages/microphone.yaml
+  # esparagus_echo:
+  #   url: https://github.com/sonocotta/esparagus-echo
+  #   ref: main
+  #   files:
+      # - firmware/esphome/packages/microphone-i2s.yaml
+      # - firmware/esphome/packages/microphone.yaml
 
-    # # Debug/local development fallback:
+  # Debug/local development fallback:
+  # microphone_i2s: !include packages/microphone-i2s.yaml
   # microphone: !include packages/microphone.yaml
-
+  # audio_voice_assist: !include packages/audio-voice-assist.yaml
+  audio: !include packages/audio.yaml
+  media_player: !include packages/media-player.yaml
+  media_player_dac_enable: !include packages/media-player-addon-dac-enable.yaml

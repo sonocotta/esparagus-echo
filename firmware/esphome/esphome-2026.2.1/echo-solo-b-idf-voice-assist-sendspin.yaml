@@ -1,9 +1,10 @@
 
 # ============================================================
-# Esparagus-Echo - Sendspin Configuration
+# Esparagus-Echo - Voice-Assistant Configuration
 # ============================================================
 # ESP32-S3 audio board with dual MAX98357A DAC and onboards I2S Microphone
-# Configured with Sendspin for synchronized multi-room audio
+# Configured as a Voice-Assistant 
+# Features: Wake word detection, media player with ducking, RGB LED status
 # Board-specific pinouts defined in substitutions
 # Functional blocks imported from /packages
 # ============================================================
@@ -12,7 +13,7 @@ substitutions:
   name: esphome-web-a86afc
   friendly_name: Esparagus-Echo-Solo
   task_stack_in_psram: "true"
-
+  
   # ===== Board-Specific Pinouts =====
   # I2S audio pins
   i2s_lrclk_pin: GPIO8
@@ -26,7 +27,7 @@ substitutions:
 
   # DAC enable pins
   dac_enable_pin: GPIO9
-  dac_enable_restore_mode: ALWAYS_OFF
+  dac_enable_restore_mode: ALWAYS_ON
 
   # RGB LED
   rgb_led_pin: GPIO42
@@ -61,10 +62,21 @@ esp32:
       CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC: "y"
       CONFIG_MBEDTLS_SSL_PROTO_TLS1_3: "y" 
 
+      CONFIG_ESP32_S3_BOX_BOARD: "y"
+      # OPTIMIZED WiFi buffers for streaming
+      CONFIG_ESP32_WIFI_STATIC_RX_BUFFER_NUM: "16"
+      CONFIG_ESP32_WIFI_DYNAMIC_RX_BUFFER_NUM: "32"
+      CONFIG_TCPIP_RECVMBOX_SIZE: "512"
+      CONFIG_TCP_SND_BUF_DEFAULT: "65535"
+      CONFIG_TCP_WND_DEFAULT: "512000"
+      CONFIG_TCP_RECVMBOX_SIZE: "512"
+      # Audio priority
+      CONFIG_FREERTOS_UNICORE: "n"
+      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "10"
+
 logger:
   level: DEBUG
-
-api:
+  # level: INFO  # Changed from DEBUG to reduce overhead
 
 ota:
   platform: esphome
@@ -73,6 +85,8 @@ ota:
 wifi:
   ssid: !secret esphome_wifi_ssid
   password: !secret esphome_wifi_password
+
+api:
 
 psram:
   mode: octal
@@ -97,10 +111,22 @@ packages:
   #   url: https://github.com/sonocotta/esparagus-echo
   #   ref: main
   #   files:
-      # - firmware/esphome/packages/sendspin-audio.yaml
-      # - firmware/esphome/packages/sendspin.yaml
-      # - firmware/esphome/packages/sendspin-addon-dac-enable.yaml
+      # - firmware/esphome/packages/microphone-i2s.yaml
+      # - firmware/esphome/packages/microphone.yaml
+      # - firmware/esphome/packages/audio-voice-assist.yaml
+      # - firmware/esphome/packages/voice-assist.yaml
+      # - firmware/esphome/packages/voice-assist-addon-dac-enable.yaml
+      # - firmware/esphome/packages/voice-assist-media-player.yaml
 
+
+  # # Debug/local development fallback:
+  microphone_i2s: !include packages/microphone-i2s.yaml
+  microphone: !include packages/microphone.yaml
   audio: !include packages/audio.yaml
+
+  # B: Using Sendspin media player with ducking support
   sendspin: !include packages/sendspin.yaml
-  sendspin_addon_dac_enable: !include packages/sendspin-addon-dac-enable.yaml
+  voice_assist: !include packages/voice-assist-sendspin.yaml
+  # disabled, since it goes into conflict with the DAC enable logic in voice-assist
+  # sendspin_addon_dac_enable: !include packages/sendspin-addon-dac-enable.yaml
+  media_player_addon_voice_assist: !include packages/sendspin-addon-voice-assist.yaml

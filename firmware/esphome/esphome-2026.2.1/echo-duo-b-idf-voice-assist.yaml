@@ -27,7 +27,7 @@ substitutions:
 
   # DAC enable pins
   dac_enable_pin: GPIO9
-  dac_enable_restore_mode: ALWAYS_OFF
+  dac_enable_restore_mode: ALWAYS_ON
 
   # RGB LED
   rgb_led_pin: GPIO42
@@ -111,29 +111,31 @@ packages:
     url: https://github.com/sonocotta/esparagus-media-center
     ref: main
     files:
-      # - firmware/esphome/packages/audio.yaml
       - firmware/esphome/packages/dac-switch.yaml
-      # - firmware/esphome/packages/media-player.yaml
-      # - firmware/esphome/packages/media-player-addon-dac-enable.yaml
       - firmware/esphome/packages/light-x.yaml
       - firmware/esphome/packages/monitoring.yaml
       - firmware/esphome/packages/monitoring-wifi.yaml
-      # Optional ethernet (replace wifi config if you use this, you need to exclude OLED package if you do this to free up SPI bus)
-      # - firmware/esphome/packages/ethernet-w5500.yaml
 
-  esparagus_echo:
-    url: https://github.com/sonocotta/esparagus-echo
-    ref: main
-    files:
-      - firmware/esphome/packages/audio.yaml
-      - firmware/esphome/packages/microphone.yaml
-      - firmware/esphome/packages/voice-assist.yaml
-      - firmware/esphome/packages/voice-assist-addon-dac-enable.yaml
-      - firmware/esphome/packages/voice-assist-media-player.yaml
+  # esparagus_echo:
+  #   url: https://github.com/sonocotta/esparagus-echo
+  #   ref: main
+  #   files:
+      # - firmware/esphome/packages/microphone-i2s.yaml
+      # - firmware/esphome/packages/microphone.yaml
+      # - firmware/esphome/packages/audio-voice-assist.yaml
+      # - firmware/esphome/packages/voice-assist.yaml
+      # - firmware/esphome/packages/voice-assist-addon-dac-enable.yaml
+      # - firmware/esphome/packages/voice-assist-media-player.yaml
+
 
   # # Debug/local development fallback:
-  # audio: !include packages/audio.yaml
-  # microphone: !include packages/microphone.yaml
+  microphone_i2s: !include packages/microphone-i2s.yaml
+  microphone: !include packages/microphone.yaml
+  audio: !include packages/audio.yaml
 
-  # media_player: !include packages/voice-assist-media-player.yaml
-  # voice_assistant: !include packages/voice-assist.yaml
+  # A: Using standard HA media player
+  media_player: !include packages/media-player.yaml
+  voice_assist: !include packages/voice-assist.yaml
+  # disabled, since it goes into conflict with the DAC enable logic in voice-assist
+  # voice_assist_dac_enable: !include packages/voice-assist-addon-dac-enable.yaml
+  media_player_addon_voice_assist: !include packages/media-player-addon-voice-assist.yaml

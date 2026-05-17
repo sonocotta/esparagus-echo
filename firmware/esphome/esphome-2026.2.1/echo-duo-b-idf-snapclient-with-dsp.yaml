@@ -12,6 +12,7 @@
 # Board-specific pinouts defined in substitutions
 # Functional blocks imported from /packages
 # ============================================================
+
 substitutions:
   name: esphome-web-a87b38
   friendly_name: Esparagus-Echo-Duo
