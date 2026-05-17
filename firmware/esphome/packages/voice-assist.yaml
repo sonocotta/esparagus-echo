@@ -1,6 +1,7 @@
 substitutions:
   # Voice Assistant Configuration
   wake_word: okay_nabu
+  media_player_led_control: "false"  # disable media-player LED control; voice-assist manages LEDs
   speaker_volume: 60%
   voice_assist_idle_phase_id: '1'
   voice_assist_listening_phase_id: '2'
@@ -15,7 +16,7 @@ esphome:
     priority: 200.0
     then:
       - media_player.volume_set:
-          id: voice_assistant_media_player
+          id: external_media_player
           volume: ${speaker_volume}
       - delay: 30s
       - if:
@@ -92,6 +93,7 @@ micro_wake_word:
                       switch.is_off: ducking_switch
                     then:
                       media_player.stop:
+                        id: external_media_player
                 - if:
                     condition:
                       voice_assistant.is_running:
@@ -101,8 +103,10 @@ micro_wake_word:
                       - if:
                           condition:
                             media_player.is_announcing:
+                              id: external_media_player
                           then:
                             - media_player.stop:
+                                id: external_media_player
                                 announcement: true
                           else:
                             - if:
@@ -117,9 +121,9 @@ micro_wake_word:
                             - voice_assistant.start:
 
 voice_assistant:
-  id: va
+  id: voice_assistant_id
   microphone: voice_assistant_mic
-  media_player: voice_assistant_media_player
+  media_player: external_media_player
   use_wake_word: false
   auto_gain: 31dBFS
   on_client_connected:
@@ -162,7 +166,7 @@ voice_assistant:
         effect: "Slow Pulse"
   on_start:
     - mixer_speaker.apply_ducking:
-        id: media_mixing_input
+        id: media_mixer_input
         decibel_reduction: 20
         duration: 0.0s
   on_end:
@@ -171,7 +175,7 @@ voice_assistant:
             not:
               voice_assistant.is_running:
         - mixer_speaker.apply_ducking:
-            id: media_mixing_input
+            id: media_mixer_input
             decibel_reduction: 0
             duration: 1.0s
         - light.turn_off:
@@ -223,6 +227,7 @@ script:
                 effect: none
           else:
             - light.turn_off: rgb_front_led
+
   - id: play_sound
     parameters:
       priority: bool
@@ -230,25 +235,27 @@ script:
     then:
       - lambda: |-
           if (priority) {
-            id(voice_assistant_media_player)
+            id(external_media_player)
               ->make_call()
               .set_command(media_player::MediaPlayerCommand::MEDIA_PLAYER_COMMAND_STOP)
               .set_announcement(true)
               .perform();
           }
-          if ( (id(voice_assistant_media_player).state != media_player::MediaPlayerState::MEDIA_PLAYER_STATE_ANNOUNCING ) || priority) {
-            id(voice_assistant_media_player)
+          if ( (id(external_media_player).state != media_player::MediaPlayerState::MEDIA_PLAYER_STATE_ANNOUNCING ) || priority) {
+            id(external_media_player)
               ->play_file(sound_file, true, false);
           }
+
   - id: enable_repeat_one
     then:
       - lambda: |-
-            id(voice_assistant_media_player)
+            id(external_media_player)
               ->make_call()
               .set_command(media_player::MediaPlayerCommand::MEDIA_PLAYER_COMMAND_REPEAT_ONE)
               .set_announcement(true)
               .perform();
-            id(voice_assistant_media_player)->set_playlist_delay_ms(speaker::AudioPipelineType::ANNOUNCEMENT, 500);
+            id(external_media_player)->set_playlist_delay_ms(speaker::AudioPipelineType::ANNOUNCEMENT, 500);
+
   - id: ring_timer
     then:
       - script.execute: enable_repeat_one
@@ -256,18 +263,18 @@ script:
           id: play_sound
           priority: true
           sound_file: !lambda return id(timer_finished_sound);
+
   - id: disable_repeat
     then:
       - lambda: |-
-            id(voice_assistant_media_player)
+            id(external_media_player)
               ->make_call()
               .set_command(media_player::MediaPlayerCommand::MEDIA_PLAYER_COMMAND_REPEAT_OFF)
               .set_announcement(true)
               .perform();
-            id(voice_assistant_media_player)->set_playlist_delay_ms(speaker::AudioPipelineType::ANNOUNCEMENT, 0);
+            id(external_media_player)->set_playlist_delay_ms(speaker::AudioPipelineType::ANNOUNCEMENT, 0);
 
 switch:
-
   - platform: template
     name: "${friendly_name} Enable Voice Assistant"
     id: use_wake_word
@@ -301,6 +308,7 @@ switch:
             - micro_wake_word.stop
             - lambda: id(voice_assistant_phase) = ${voice_assist_muted_phase_id};
       - script.execute: reset_led
+
   - platform: template
     name: "${friendly_name} Enable Ducking"
     id: ducking_switch
@@ -314,7 +322,7 @@ switch:
     restore_mode: ALWAYS_OFF
     on_turn_on:
       - mixer_speaker.apply_ducking:
-          id: media_mixing_input
+          id: media_mixer_input
           decibel_reduction: 20
           duration: 0.0s
       - script.execute: ring_timer
@@ -331,15 +339,18 @@ switch:
       - script.execute: disable_repeat
       - if:
           condition:
-            media_player.is_announcing:
+            media_player.is_announcing: 
+              id: external_media_player
           then:
-            media_player.stop:
-              announcement: true
+            media_player.stop: 
+                id: external_media_player
+                announcement: true
       - mixer_speaker.apply_ducking:
-          id: media_mixing_input
+          id: media_mixer_input
           decibel_reduction: 0
           duration: 1.0s
       - script.execute: reset_led
+
   - platform: template
     id: wake_sound
     name: "${friendly_name} Wake Sound"

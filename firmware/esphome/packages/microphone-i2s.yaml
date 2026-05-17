@@ -13,15 +13,7 @@ substitutions:
   # I2S microphone bus
   i2s_mic_bus_id: i2s_in
 
-microphone:
-  - platform: i2s_audio
-    adc_type: external
-    id: voice_assistant_mic
-    i2s_audio_id: ${i2s_mic_bus_id}
-    i2s_din_pin: ${i2s_mic_din_pin}
-    pdm: false
-    channel: right
-    sample_rate: 16000
-    bits_per_sample: 32bit
-    use_apll: true              # Better clock accuracy
-    i2s_mode: primary
+i2s_audio:
+- id: ${i2s_mic_bus_id}
+  i2s_lrclk_pin: ${i2s_mic_lrclk_pin}
+  i2s_bclk_pin: ${i2s_mic_bclk_pin}

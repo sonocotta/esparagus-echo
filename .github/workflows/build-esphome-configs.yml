@@ -8,11 +8,13 @@ on:
       - 'firmware/esphome/**'
       - '.github/workflows/build-esphome.yml'
       - '!firmware/esphome/archive/**'
+      - '!firmware/esphome/packages-archive/**'
   pull_request:
     paths:
       - 'firmware/esphome/**'
       - '.github/workflows/build-esphome.yml'
       - '!firmware/esphome/archive/**'
+      - '!firmware/esphome/packages-archive/**'
 
 jobs:
   prepare:
@@ -29,6 +31,7 @@ jobs:
           configs=$(find firmware/esphome -maxdepth 2 -name "*.yaml" -type f \
             | grep -v "/packages/" \
             | grep -v "/archive/" \
+            | grep -v "/packages-archive/" \
             | grep -v "/secrets/" \
             | grep -v "secrets.yaml" \
             | jq -R -s -c 'split("\n")[:-1]')
@@ -77,5 +80,5 @@ jobs:
             -v "${{ github.workspace }}/firmware/esphome/packages:/config/packages" \
             -v "${{ github.workspace }}/.esphome-cache:/cache" \
             -e PLATFORMIO_BUILD_CACHE_DIR=/cache/.pio-cache \
-            esphome/esphome:latest \
+            esphome/esphome:dev \
             compile "/config/${{ steps.config-info.outputs.config_file }}"

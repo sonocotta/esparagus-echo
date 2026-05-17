@@ -1,101 +1,28 @@
-# based on https://github.com/HA-TB303/ultimatesensor_mini/blob/main/ultimatesensor_mini_v1_basic.yaml
-
 substitutions:
-  name: esphome-web-32fb54
-  friendly_name: esparagus-duo
-  ## Preferred wake word, choose from: https://github.com/esphome/micro-wake-word-models/tree/main/models
-  # github://esphome/micro-wake-word-models/models/okay_nabu.json
+  # Voice Assistant Configuration
   wake_word: okay_nabu
-  ## Set the buildt in speaker volume percentage to prevent it from distorting
-  speaker_volume: 50%
-  ## Phases of the Voice Assistant
-  ## IDLE: The voice assistant is ready to be triggered by a wake-word
+  speaker_volume: 60%
   voice_assist_idle_phase_id: '1'
-  ## LISTENING: The voice assistant is ready to listen to a voice command (after being triggered by the wake word)
   voice_assist_listening_phase_id: '2'
-  ## THINKING: The voice assistant is currently processing the command
   voice_assist_thinking_phase_id: '3'
-  ## REPLYING: The voice assistant is replying to the command
   voice_assist_replying_phase_id: '4'
-  ## NOT_READY: The voice assistant is not ready
   voice_assist_not_ready_phase_id: '10'
-  ## ERROR: The voice assistant encountered an error
   voice_assist_error_phase_id: '11'
-  ## MUTED: The voice assistant is muted and will not reply to a wake-word
   voice_assist_muted_phase_id: '12'
 
 esphome:
-  name: ${name}
-  friendly_name: ${friendly_name}
-  name_add_mac_suffix: false
-  project:
-    name: esphome.web
-    version: '1.0'
-  min_version: 2025.4.1
-  platformio_options:
-    build_flags: -DBOARD_HAS_PSRAM
-    board_build.flash_mode: dio
-    board_upload.maximum_size: 16777216
   on_boot:
     priority: 200.0
     then:
       - media_player.volume_set:
-          id: voice_assistant_media_player
+          id: external_media_player
           volume: ${speaker_volume}
-      - switch.turn_on:
-          id: speaker_switch 
       - delay: 30s
       - if:
           condition:
             lambda: return id(init_in_progress);
           then:
             - lambda: id(init_in_progress) = false;
-
-esp32:
-  board: esp32-s3-devkitc-1
-  variant: ESP32S3
-  flash_size: 16MB
-  framework:
-    type: esp-idf
-    sdkconfig_options:
-      CONFIG_ESP32_S3_BOX_BOARD: "y"
-      CONFIG_ESP32_WIFI_STATIC_RX_BUFFER_NUM: "16"
-      CONFIG_ESP32_WIFI_DYNAMIC_RX_BUFFER_NUM: "512"
-      CONFIG_TCPIP_RECVMBOX_SIZE: "512"
-      CONFIG_TCP_SND_BUF_DEFAULT: "65535"
-      CONFIG_TCP_WND_DEFAULT: "512000"
-      CONFIG_TCP_RECVMBOX_SIZE: "512"
-
-# Enable logging
-logger:
-  level: DEBUG
-  
-# Enable Home Assistant API
-api:
-
-# Allow Over-The-Air updates
-ota:
-  platform: esphome
-  password: !secret esphome_ota_password
-
-wifi:
-  ssid: !secret esphome_wifi_ssid
-  password: !secret esphome_wifi_password
-  ap:
-    ssid: "$name Hotspot"
-    password: !secret esphome_ap_password
-
-### Optional if you want ethernet (then remove above wifi config)
-#ethernet:
-#  type: W5500
-#  clk_pin: GPIO12
-#  mosi_pin: GPIO11
-#  miso_pin: GPIO13
-#  cs_pin: GPIO10
-#  interrupt_pin: GPIO6
-#  reset_pin: GPIO5
-
-captive_portal:
 
 globals:
   - id: init_in_progress
@@ -107,124 +34,8 @@ globals:
     restore_value: no
     initial_value: ${voice_assist_not_ready_phase_id}
 
-button:
-  - platform: restart
-    id: restart_btn
-    name: "${friendly_name} REBOOT"
-
-psram:
-  mode: octal
-  speed: 80MHz
-
-i2s_audio:
-  - id: i2s_in
-    i2s_lrclk_pin: GPIO7 
-    i2s_bclk_pin: GPIO16
-  
-  - id: i2s_out
-    i2s_lrclk_pin: GPIO8
-    i2s_bclk_pin: GPIO18
-
-
-microphone:
-  - platform: i2s_audio
-    adc_type: external
-    id: voice_assistant_mic
-    i2s_audio_id: i2s_in
-    i2s_din_pin: GPIO15
-    pdm: false
-    channel: right
-    sample_rate: 16000
-    bits_per_sample: 32bit
-
-# use speaker plattform for mix announcements and media player
-
-speaker:
-  - platform: i2s_audio
-    id: i2s_audio_speaker
-    i2s_audio_id: i2s_out
-    i2s_dout_pin: GPIO17
-    dac_type: external
-    channel: "stereo"
-    i2s_mode: primary
-    buffer_duration: 100ms
-    timeout: never
-    sample_rate: 48000
-    bits_per_sample: 32bit
-
-  - platform: mixer
-    id: mixing_speaker
-    output_speaker: i2s_audio_speaker
-    num_channels: 2
-    source_speakers:
-      - id: announcement_mixing_input
-        timeout: never
-      - id: media_mixing_input
-        timeout: never
-
-  # Virtual speakers to resample each pipelines' audio, if necessary, as the mixer speaker requires the same sample rate
-  - platform: resampler
-    id: announcement_resampling_speaker
-    output_speaker: announcement_mixing_input
-    sample_rate: 48000
-    bits_per_sample: 16
-  - platform: resampler
-    id: media_resampling_speaker
-    output_speaker: media_mixing_input
-    sample_rate: 48000
-    bits_per_sample: 16
-
-
-media_player:
-  - platform: speaker
-    id: voice_assistant_media_player
-    name: "Media Player"
-    internal: false
-    announcement_pipeline:
-      speaker: announcement_resampling_speaker
-      format: FLAC     # FLAC is the least processor intensive codec
-      num_channels: 1  # Stereo audio is unnecessary for announcements
-      sample_rate: 48000
-    media_pipeline:
-      speaker: media_resampling_speaker
-      format: FLAC     # FLAC is the least processor intensive codec
-      num_channels: 2
-      sample_rate: 48000
-    on_announcement:
-      - mixer_speaker.apply_ducking:
-          id: media_mixing_input
-          decibel_reduction: 20
-          duration: 0.0s
-    on_state:
-      if:
-        condition:
-          and:
-            - switch.is_off: timer_ringing
-            - not:
-                voice_assistant.is_running:
-            - not:
-                media_player.is_announcing:
-        then:
-          - mixer_speaker.apply_ducking:
-              id: media_mixing_input
-              decibel_reduction: 0
-              duration: 1.0s
-    files:
-    - id: timer_finished_sound
-      file: https://github.com/esphome/home-assistant-voice-pe/raw/dev/sounds/timer_finished.flac
-    - id: wake_word_triggered_sound
-      file: https://github.com/esphome/home-assistant-voice-pe/raw/dev/sounds/wake_word_triggered.flac
-
 light:
-  - platform: esp32_rmt_led_strip
-    id: rgb_front_led
-    name: "${friendly_name} Front LED"
-    rgb_order: GRB
-    pin: GPIO42
-    num_leds: 3
-    rmt_symbols: 96
-    chipset: ws2812
-    default_transition_length: 0s
+  - id: !extend rgb_front_led
     effects:
       - addressable_color_wipe:
           name: "Connecting"
@@ -253,6 +64,7 @@ light:
           max_brightness: 100%
 
 micro_wake_word:
+  id: mww
   models:
     - model: ${wake_word}
   microphone: voice_assistant_mic
@@ -268,34 +80,33 @@ micro_wake_word:
               green: 100%
               brightness: 75%
               effect: "Slow Pulse"
-          # If a timer is ringing: Stop it, do not start the voice assistant (We can stop timer from voice!)
           - if:
               condition:
                 switch.is_on: timer_ringing
               then:
                 - switch.turn_off: timer_ringing
                 - micro_wake_word.start:
-              # Stop voice assistant if running
               else:
                 - if:
                     condition:
                       switch.is_off: ducking_switch
                     then:
                       media_player.stop:
+                        id: external_media_player
                 - if:
                     condition:
                       voice_assistant.is_running:
                     then:
                       voice_assistant.stop:
-                    # Stop any other media player announcement
                     else:
                       - if:
                           condition:
                             media_player.is_announcing:
+                              id: external_media_player
                           then:
                             - media_player.stop:
+                                id: external_media_player
                                 announcement: true
-                          # Start the voice assistant and play the wake sound, if enabled
                           else:
                             - if:
                                 condition:
@@ -306,19 +117,14 @@ micro_wake_word:
                                       priority: true
                                       sound_file: !lambda return id(wake_word_triggered_sound);
                                   - delay: 300ms
-                            
                             - voice_assistant.start:
-
 
 voice_assistant:
   id: va
   microphone: voice_assistant_mic
-  media_player: voice_assistant_media_player
+  media_player: external_media_player
   use_wake_word: false
-  #vad_threshold: 3
-  #noise_suppression_level: 1
   auto_gain: 31dBFS
-  #volume_multiplier: 15.0
   on_client_connected:
     - lambda: id(init_in_progress) = false;
     - if:
@@ -359,17 +165,16 @@ voice_assistant:
         effect: "Slow Pulse"
   on_start:
     - mixer_speaker.apply_ducking:
-        id: media_mixing_input
-        decibel_reduction: 20  # Number of dB quieter; higher implies more quiet, 0 implies full volume
-        duration: 0.0s         # The duration of the transition (default is no transition)
+        id: media_mixer_input
+        decibel_reduction: 20
+        duration: 0.0s
   on_end:
       then:
         - wait_until:
             not:
               voice_assistant.is_running:
-        # Stop ducking audio.
         - mixer_speaker.apply_ducking:
-            id: media_mixing_input
+            id: media_mixer_input
             decibel_reduction: 0
             duration: 1.0s
         - light.turn_off:
@@ -421,7 +226,7 @@ script:
                 effect: none
           else:
             - light.turn_off: rgb_front_led
-  # Script executed when we want to play sounds on the device.
+
   - id: play_sound
     parameters:
       priority: bool
@@ -429,27 +234,35 @@ script:
     then:
       - lambda: |-
           if (priority) {
-            id(voice_assistant_media_player)
+            id(external_media_player)
               ->make_call()
               .set_command(media_player::MediaPlayerCommand::MEDIA_PLAYER_COMMAND_STOP)
               .set_announcement(true)
               .perform();
           }
-          if ( (id(voice_assistant_media_player).state != media_player::MediaPlayerState::MEDIA_PLAYER_STATE_ANNOUNCING ) || priority) {
-            id(voice_assistant_media_player)
-              ->play_file(sound_file, true, false);
+          if ( (id(external_media_player).state != media_player::MediaPlayerState::MEDIA_PLAYER_STATE_ANNOUNCING ) || priority) {
+            for (const auto &named_file : audio_file::get_named_audio_files()) {
+              if (named_file.file == sound_file) {
+                id(external_media_player)
+                  ->make_call()
+                  .set_media_url(std::string("audio-file://") + named_file.file_id)
+                  .set_announcement(true)
+                  .perform();
+                break;
+              }
+            }
           }
-  # Script executed when the timer is ringing, to playback sounds.
+
   - id: enable_repeat_one
     then:
-      # Turn on the repeat mode and pause for 500 ms between playlist items/repeats
       - lambda: |-
-            id(voice_assistant_media_player)
+            id(external_media_player)
               ->make_call()
               .set_command(media_player::MediaPlayerCommand::MEDIA_PLAYER_COMMAND_REPEAT_ONE)
               .set_announcement(true)
               .perform();
-            id(voice_assistant_media_player)->set_playlist_delay_ms(speaker::AudioPipelineType::ANNOUNCEMENT, 500);
+            id(external_media_player)->set_playlist_delay_ms(speaker_source::ANNOUNCEMENT_PIPELINE, 500);
+
   - id: ring_timer
     then:
       - script.execute: enable_repeat_one
@@ -457,33 +270,24 @@ script:
           id: play_sound
           priority: true
           sound_file: !lambda return id(timer_finished_sound);
+
   - id: disable_repeat
     then:
-      # Turn off the repeat mode and pause for 0 ms between playlist items/repeats
       - lambda: |-
-            id(voice_assistant_media_player)
+            id(external_media_player)
               ->make_call()
               .set_command(media_player::MediaPlayerCommand::MEDIA_PLAYER_COMMAND_REPEAT_OFF)
               .set_announcement(true)
               .perform();
-            id(voice_assistant_media_player)->set_playlist_delay_ms(speaker::AudioPipelineType::ANNOUNCEMENT, 0);
-
+            id(external_media_player)->set_playlist_delay_ms(speaker_source::ANNOUNCEMENT_PIPELINE, 0);
 
 switch:
-  - platform: gpio
-    id: speaker_switch
-    icon: "mdi:speaker"
-    pin:
-      number: GPIO9
   - platform: template
-    name: Enable Voice Assistant
+    name: "${friendly_name} Enable Voice Assistant"
     id: use_wake_word
     optimistic: true
     restore_mode: RESTORE_DEFAULT_ON
     icon: mdi:assistant
-    ## When the switch is turned on (on Home Assistant):
-    ## Start the voice assistant component
-    ## Set the correct phase and run the script to refresh the LED status
     on_turn_on:
       - logger.log: "switch on"
       - if:
@@ -512,14 +316,12 @@ switch:
             - lambda: id(voice_assistant_phase) = ${voice_assist_muted_phase_id};
       - script.execute: reset_led
 
-
   - platform: template
-    name: "Enable ducking"
+    name: "${friendly_name} Enable Ducking"
     id: ducking_switch
     optimistic: true
     restore_mode: RESTORE_DEFAULT_ON
     icon: mdi:volume-high
-
   - platform: template
     id: timer_ringing
     optimistic: true
@@ -527,7 +329,7 @@ switch:
     restore_mode: ALWAYS_OFF
     on_turn_on:
       - mixer_speaker.apply_ducking:
-          id: media_mixing_input
+          id: media_mixer_input
           decibel_reduction: 20
           duration: 0.0s
       - script.execute: ring_timer
@@ -542,19 +344,19 @@ switch:
       - switch.turn_off: timer_ringing
     on_turn_off:
       - script.execute: disable_repeat
-      # Stop any current annoucement (ie: stop the timer ring mid playback)
       - if:
           condition:
-            media_player.is_announcing:
+            media_player.is_announcing: 
+              id: external_media_player
           then:
-            media_player.stop:
-              announcement: true
+            media_player.stop: 
+                id: external_media_player
+                announcement: true
       - mixer_speaker.apply_ducking:
-          id: media_mixing_input
+          id: media_mixer_input
           decibel_reduction: 0
           duration: 1.0s
       - script.execute: reset_led
-    
 
   - platform: template
     id: wake_sound
@@ -562,4 +364,3 @@ switch:
     optimistic: true
     restore_mode: RESTORE_DEFAULT_ON
     icon: "mdi:bullhorn"
-

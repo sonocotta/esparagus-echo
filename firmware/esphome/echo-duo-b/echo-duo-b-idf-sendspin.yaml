@@ -1,10 +1,9 @@
 
 # ============================================================
-# Esparagus-Echo - Voice-Assistant Configuration
+# Esparagus-Echo - Sendspin Configuration
 # ============================================================
 # ESP32-S3 audio board with dual MAX98357A DAC and onboards I2S Microphone
-# Configured as a Voice-Assistant 
-# Features: Wake word detection, media player with ducking, RGB LED status
+# Configured with Sendspin for synchronized multi-room audio
 # Board-specific pinouts defined in substitutions
 # Functional blocks imported from /packages
 # ============================================================
@@ -13,7 +12,7 @@ substitutions:
   name: esphome-web-a87b38
   friendly_name: Esparagus-Echo-Duo
   task_stack_in_psram: "true"
-  
+
   # ===== Board-Specific Pinouts =====
   # I2S audio pins
   i2s_lrclk_pin: GPIO8
@@ -46,7 +45,7 @@ substitutions:
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
-  min_version: 2026.2.1
+  min_version: 2026.5.0
   name_add_mac_suffix: false
   platformio_options:
     board_build.flash_mode: dio
@@ -72,20 +71,10 @@ esp32:
       CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC: "y"
       CONFIG_MBEDTLS_SSL_PROTO_TLS1_3: "y" 
 
-      CONFIG_ESP32_S3_BOX_BOARD: "y"
-      # OPTIMIZED WiFi buffers for streaming
-      CONFIG_ESP32_WIFI_STATIC_RX_BUFFER_NUM: "16"
-      CONFIG_ESP32_WIFI_DYNAMIC_RX_BUFFER_NUM: "32"
-      CONFIG_TCPIP_RECVMBOX_SIZE: "512"
-      CONFIG_TCP_SND_BUF_DEFAULT: "65535"
-      CONFIG_TCP_WND_DEFAULT: "512000"
-      CONFIG_TCP_RECVMBOX_SIZE: "512"
-      # Audio priority
-      CONFIG_FREERTOS_UNICORE: "n"
-      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "10"
-
 logger:
-  level: INFO  # Changed from DEBUG to reduce overhead
+  level: DEBUG
+
+api:
 
 ota:
   platform: esphome
@@ -94,8 +83,6 @@ ota:
 wifi:
   ssid: !secret esphome_wifi_ssid
   password: !secret esphome_wifi_password
-
-api:
 
 psram:
   mode: octal
@@ -111,29 +98,23 @@ packages:
     url: https://github.com/sonocotta/esparagus-media-center
     ref: main
     files:
-      # - firmware/esphome/packages/audio.yaml
       - firmware/esphome/packages/dac-switch.yaml
-      # - firmware/esphome/packages/media-player.yaml
-      # - firmware/esphome/packages/media-player-addon-dac-enable.yaml
       - firmware/esphome/packages/light-x.yaml
       - firmware/esphome/packages/monitoring.yaml
       - firmware/esphome/packages/monitoring-wifi.yaml
       # Optional ethernet (replace wifi config if you use this, you need to exclude OLED package if you do this to free up SPI bus)
       # - firmware/esphome/packages/ethernet-w5500.yaml
 
+
   esparagus_echo:
     url: https://github.com/sonocotta/esparagus-echo
     ref: main
     files:
       - firmware/esphome/packages/audio.yaml
-      - firmware/esphome/packages/microphone.yaml
-      - firmware/esphome/packages/voice-assist.yaml
-      - firmware/esphome/packages/voice-assist-addon-dac-enable.yaml
-      - firmware/esphome/packages/voice-assist-media-player.yaml
+      - firmware/esphome/packages/sendspin.yaml
+      - firmware/esphome/packages/sendspin-addon-dac-enable.yaml
 
   # # Debug/local development fallback:
   # audio: !include packages/audio.yaml
-  # microphone: !include packages/microphone.yaml
-
-  # media_player: !include packages/voice-assist-media-player.yaml
-  # voice_assistant: !include packages/voice-assist.yaml
+  # sendspin: !include packages/sendspin.yaml
+  # sendspin_addon_dac_enable: !include packages/sendspin-addon-dac-enable.yaml

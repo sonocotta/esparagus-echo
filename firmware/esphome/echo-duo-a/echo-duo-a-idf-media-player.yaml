@@ -10,23 +10,20 @@
 # ============================================================
 
 substitutions:
-  name: esphome-web-a87b38
+  name: esphome-web-47a438
   friendly_name: Esparagus-Echo-Duo
   task_stack_in_psram: "true"
 
   # ===== Board-Specific Pinouts =====
-  # I2S audio pins
-  i2s_lrclk_pin: GPIO8
-  i2s_bclk_pin: GPIO18
-  i2s_dout_pin: GPIO17
-
-  # I2S microphone pins
-  i2s_mic_lrclk_pin: GPIO7
-  i2s_mic_bclk_pin: GPIO16
-  i2s_mic_din_pin: GPIO15
+  # I2S pins
+  i2s_lrclk_pin: GPIO15
+  i2s_bclk_pin: GPIO14
+  i2s_dout_pin: GPIO16
+  i2s_mic_din_pin: GPIO21
+  i2s_mic_bus_id: i2s_out
 
   # DAC enable pins
-  dac_enable_pin: GPIO9
+  dac_enable_pin: GPIO17
   dac_enable_restore_mode: ALWAYS_OFF
 
   # RGB LED
@@ -99,10 +96,7 @@ packages:
     url: https://github.com/sonocotta/esparagus-media-center
     ref: main
     files:
-      - firmware/esphome/packages/audio.yaml
       - firmware/esphome/packages/dac-switch.yaml
-      - firmware/esphome/packages/media-player.yaml
-      - firmware/esphome/packages/media-player-addon-dac-enable.yaml
       - firmware/esphome/packages/light-x.yaml
       - firmware/esphome/packages/monitoring.yaml
       - firmware/esphome/packages/monitoring-wifi.yaml
@@ -113,8 +107,11 @@ packages:
     url: https://github.com/sonocotta/esparagus-echo
     ref: main
     files:
-      - firmware/esphome/packages/microphone.yaml
+      - firmware/esphome/packages/audio.yaml
+      - firmware/esphome/packages/media-player.yaml
+      - firmware/esphome/packages/media-player-addon-dac-enable.yaml
 
-    # # Debug/local development fallback:
-  # microphone: !include packages/microphone.yaml
-
+  # # Debug/local development fallback:
+  # audio: !include packages/audio.yaml
+  # media_player: !include packages/media-player.yaml
+  # media_player_dac_enable: !include packages/media-player-addon-dac-enable.yaml

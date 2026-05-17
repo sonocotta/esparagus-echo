@@ -1,15 +1,53 @@
+# ============================================================
+# Voice Assist - DAC enable addon
+# ============================================================
+# Full replacement for sendspin-addon-dac-enable.yaml when voice
+# assist is active. Do NOT include both — this file handles all
+# DAC enable/disable for external_media_player with voice-assist-
+# aware guards on on_idle.
+#
+# Requires:
+#   - voice-assist.yaml  (voice_assistant_id, external_media_player,
+#                         timer_ringing switch)
+#   - dac-switch.yaml    (enable_dac switch)
+#
+# on_idle guard rationale:
+#   - timer_ringing: repeat-one mode has a 500 ms playlist gap;
+#     the player briefly goes IDLE between repeats — keep DAC on.
+#   - voice_assistant.is_running: player may hit IDLE momentarily
+#     between the stop-before-chime and the chime announcement
+#     itself, or between TTS chunks in a conversation.
+# ============================================================
 
-# ============================================================
-# Voice Assist - External DAC addon
-# ============================================================
-# Extends voice-assist.yaml to attach an external DAC component
-# to the existing I2S speaker.
-# Dependencies: voice-assist.yaml
-# ============================================================
+media_player:
+  - id: !extend external_media_player
 
-esphome:
-  on_boot:
-    priority: 220.0
-    then:
-      - switch.turn_on:
-          id: enable_dac 
+    # Regular media playback (Sendspin / HTTP).
+    on_play:
+      - if:
+          condition:
+            switch.is_off: enable_dac
+          then:
+            switch.turn_on: enable_dac
+
+    # Wake chime, TTS, timer sounds — all announcements.
+    on_announcement:
+      - if:
+          condition:
+            switch.is_off: enable_dac
+          then:
+            switch.turn_on: enable_dac
+
+    # Disable DAC only when truly idle — not mid-conversation or
+    # mid-timer. This replaces the unguarded on_idle in
+    # sendspin-addon-dac-enable.yaml.
+    on_idle:
+      - if:
+          condition:
+            and:
+              - switch.is_on: enable_dac
+              - switch.is_off: timer_ringing
+              - not:
+                  voice_assistant.is_running:
+          then:
+            switch.turn_off: enable_dac
