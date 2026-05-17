@@ -106,14 +106,15 @@ packages:
       # - firmware/esphome/packages/ethernet-w5500.yaml
 
 
-  # esparagus_echo:
-  #   url: https://github.com/sonocotta/esparagus-echo
-  #   ref: main
-  #   files:
-      # - firmware/esphome/packages/sendspin-audio.yaml
-      # - firmware/esphome/packages/sendspin.yaml
-      # - firmware/esphome/packages/sendspin-addon-dac-enable.yaml
+  esparagus_echo:
+    url: https://github.com/sonocotta/esparagus-echo
+    ref: features/voice-assist-with-sendspin
+    files:
+      - firmware/esphome/packages/audio.yaml
+      - firmware/esphome/packages/sendspin.yaml
+      - firmware/esphome/packages/sendspin-addon-dac-enable.yaml
 
-  audio: !include packages/audio.yaml
-  sendspin: !include packages/sendspin.yaml
-  sendspin_addon_dac_enable: !include packages/sendspin-addon-dac-enable.yaml
+  # # Debug/local development fallback:
+  # audio: !include packages/audio.yaml
+  # sendspin: !include packages/sendspin.yaml
+  # sendspin_addon_dac_enable: !include packages/sendspin-addon-dac-enable.yaml
