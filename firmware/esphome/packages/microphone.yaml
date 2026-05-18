@@ -12,6 +12,7 @@
 substitutions:
   # I2S microphone bus
   i2s_mic_bus_id: i2s_in
+  i2s_mic_channel: right
 
 microphone:
   - platform: i2s_audio
@@ -20,7 +21,7 @@ microphone:
     i2s_audio_id: ${i2s_mic_bus_id}
     i2s_din_pin: ${i2s_mic_din_pin}
     pdm: false
-    channel: right
+    channel: ${i2s_mic_channel}
     sample_rate: 16000
     bits_per_sample: 32bit
     use_apll: true              # Better clock accuracy
