@@ -10,6 +10,9 @@
 
 media_player:
   - id: !extend external_media_player
+    announcement_pipeline:
+      sources:
+      - announcement_audio_file_source
     media_pipeline:
       sources:
       - audio_file_source
@@ -29,11 +32,11 @@ media_player:
               decibel_reduction: 0
               duration: 1.0s
 
-
-
 media_source:
   - platform: audio_file
     id: audio_file_source
+  - platform: audio_file
+    id: announcement_audio_file_source
 
 audio_file:
   - id: timer_finished_sound
