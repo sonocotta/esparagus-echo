@@ -231,7 +231,12 @@ script:
   - id: play_sound
     parameters:
       priority: bool
-      sound_file: "audio::AudioFile*"
+      # ESPHome builds each of the media player's `files:` into flash behind a
+      # `const audio::AudioFile *`. A script parameter's type string may not contain
+      # a space, so `const audio::AudioFile*` cannot be written directly; this spells
+      # the same type. These files are not in audio_file's named registry (only the
+      # audio_file component registers there), so the pointer, not an id, is passed.
+      sound_file: "std::add_const_t<audio::AudioFile>*"
     then:
       - lambda: |-
           if (priority) {
