@@ -42,6 +42,9 @@ substitutions:
   ext_power_pin: GPIO41          # open drain, active low
   charging_pin: GPIO40           # open drain, active low
 
+  # Physical button (top side)
+  button_pin: GPIO0
+
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
@@ -109,11 +112,13 @@ packages:
     files:
       - firmware/esphome/packages/audio.yaml
       - firmware/esphome/packages/battery.yaml
+      - firmware/esphome/packages/sendspin-addon-button.yaml
       - firmware/esphome/packages/sendspin.yaml
       - firmware/esphome/packages/sendspin-addon-dac-enable.yaml
 
   # # Debug/local development fallback:
   # audio: !include packages/audio.yaml
   # battery: !include packages/battery.yaml
+  # sendspin_addon_button: !include packages/sendspin-addon-button.yaml
   # sendspin: !include packages/sendspin.yaml
   # sendspin_addon_dac_enable: !include packages/sendspin-addon-dac-enable.yaml

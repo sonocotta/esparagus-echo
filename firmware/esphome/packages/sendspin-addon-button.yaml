@@ -1,0 +1,108 @@
+# ============================================================
+# Sendspin Addon - Physical Button
+# ============================================================
+# Media-only variant of the button for configs without voice assist.
+# Same GPIO0 button and multi-click structure as the voice assist addon,
+# but the gestures drive the media player instead of a pipeline.
+#
+#   Single click  - play/pause
+#   Double click  - next track + "double_press" event
+#   Triple click  - previous track + "triple_press" event
+#   Long press    - stop + "long_press" event
+#
+# Mutually exclusive with voice-assist-addon-button.yaml: both define
+# center_button, disable_buttons and button_press_event.
+#
+# Substitutions:
+#   - button_pin: GPIO0 (strapping pin, has a hardware pullup, active low)
+#   - button_media_player_id: the media player the gestures control
+# ============================================================
+
+substitutions:
+  button_pin: GPIO0
+  button_media_player_id: external_media_player
+
+binary_sensor:
+  - platform: gpio
+    id: center_button
+    # GPIO0 is a strapping pin and carries the hardware pullup required for
+    # that role, so no internal pullup is configured here.
+    pin:
+      number: ${button_pin}
+      inverted: true
+    on_multi_click:
+      # Single click: play/pause.
+      - timing:
+          - ON for at most 1s
+          - OFF for at least 0.25s
+        then:
+          - if:
+              condition:
+                switch.is_off: disable_buttons
+              then:
+                - media_player.toggle: ${button_media_player_id}
+      # Double click: next track.
+      - timing:
+          - ON for at most 1s
+          - OFF for at most 0.25s
+          - ON for at most 1s
+          - OFF for at least 0.25s
+        then:
+          - if:
+              condition:
+                switch.is_off: disable_buttons
+              then:
+                - media_player.next: ${button_media_player_id}
+                - event.trigger:
+                    id: button_press_event
+                    event_type: "double_press"
+      # Triple click: previous track.
+      - timing:
+          - ON for at most 1s
+          - OFF for at most 0.25s
+          - ON for at most 1s
+          - OFF for at most 0.25s
+          - ON for at most 1s
+          - OFF for at least 0.25s
+        then:
+          - if:
+              condition:
+                switch.is_off: disable_buttons
+              then:
+                - media_player.previous: ${button_media_player_id}
+                - event.trigger:
+                    id: button_press_event
+                    event_type: "triple_press"
+      # Long press: stop playback.
+      - timing:
+          - ON for at least 1s
+        then:
+          - if:
+              condition:
+                switch.is_off: disable_buttons
+              then:
+                - media_player.stop: ${button_media_player_id}
+                - event.trigger:
+                    id: button_press_event
+                    event_type: "long_press"
+
+switch:
+  - platform: template
+    id: disable_buttons
+    name: "${friendly_name} Disable physical controls"
+    icon: "mdi:button-pointer"
+    entity_category: config
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    disabled_by_default: true
+
+event:
+  - platform: template
+    id: button_press_event
+    name: "${friendly_name} Button press"
+    icon: mdi:button-pointer
+    device_class: button
+    event_types:
+      - double_press
+      - triple_press
+      - long_press

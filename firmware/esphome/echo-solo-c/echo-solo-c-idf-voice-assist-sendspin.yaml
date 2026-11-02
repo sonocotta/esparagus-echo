@@ -43,6 +43,9 @@ substitutions:
   ext_power_pin: GPIO41          # open drain, active low
   charging_pin: GPIO40           # open drain, active low
 
+  # Physical button (top side)
+  button_pin: GPIO0
+
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
@@ -125,6 +128,7 @@ packages:
       - firmware/esphome/packages/microphone.yaml
       - firmware/esphome/packages/audio.yaml
       - firmware/esphome/packages/battery.yaml
+      - firmware/esphome/packages/voice-assist-addon-button.yaml
       - firmware/esphome/packages/sendspin.yaml
       - firmware/esphome/packages/voice-assist-sendspin.yaml
       - firmware/esphome/packages/sendspin-addon-voice-assist.yaml
@@ -136,6 +140,7 @@ packages:
   # microphone: !include packages/microphone.yaml
   # audio: !include packages/audio.yaml
   # battery: !include packages/battery.yaml
+  # voice_assist_addon_button: !include packages/voice-assist-addon-button.yaml
 
   # # B: Using Sendspin media player with ducking support
   # sendspin: !include packages/sendspin.yaml
