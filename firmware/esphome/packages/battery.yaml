@@ -1,0 +1,83 @@
+# ============================================================
+# Battery & Power Monitoring
+# ============================================================
+# - Battery voltage via ADC behind a resistor divider
+# - Battery level (%) estimated linearly from voltage (single-cell Li-ion)
+# - External power and charging status inputs (open drain, active low)
+#
+# Substitutions (override in device config):
+#   - battery_adc_pin: ADC pin connected to the divider output
+#   - battery_divider_ratio: Vbat / Vadc (1:3 divider -> "3.0")
+#   - battery_empty_voltage / battery_full_voltage: 0% / 100% points
+#   - ext_power_pin: external power sense input (active low)
+#   - charging_pin: charger status input (active low)
+# ============================================================
+
+substitutions:
+  battery_adc_pin: GPIO42
+  battery_divider_ratio: "3.0"
+  battery_empty_voltage: "3.3"
+  battery_full_voltage: "4.2"
+  ext_power_pin: GPIO41
+  charging_pin: GPIO40
+
+sensor:
+  - platform: adc
+    id: battery_voltage
+    name: "Battery Voltage"
+    pin: ${battery_adc_pin}
+    attenuation: 12db
+    update_interval: 5s
+    accuracy_decimals: 2
+    device_class: voltage
+    unit_of_measurement: "V"
+    entity_category: diagnostic
+    filters:
+      - multiply: ${battery_divider_ratio}
+      - sliding_window_moving_average:
+          window_size: 6
+          send_every: 6
+
+  - platform: copy
+    id: battery_level
+    name: "Battery Level"
+    source_id: battery_voltage
+    device_class: battery
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    filters:
+      - calibrate_linear:
+          method: exact
+          datapoints:
+            - ${battery_empty_voltage} -> 0.0
+            - ${battery_full_voltage} -> 100.0
+      - clamp:
+          min_value: 0
+          max_value: 100
+
+binary_sensor:
+  - platform: gpio
+    id: external_power
+    name: "External Power"
+    pin:
+      number: ${ext_power_pin}
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    device_class: power
+    filters:
+      - delayed_on_off: 100ms
+
+  - platform: gpio
+    id: battery_charging
+    name: "Battery Charging"
+    pin:
+      number: ${charging_pin}
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    device_class: battery_charging
+    filters:
+      - delayed_on_off: 500ms
