@@ -14,12 +14,12 @@ ESPHome configurations for the Esparagus Echo boards. There is a folder per boar
 
 | Folder | Board | Status |
 | --- | --- | --- |
-| [echo-solo-c](echo-solo-c) | Esparagus Solo rev C / C1 | Current |
-| [echo-solo-b](echo-solo-b) | Esparagus Solo rev B | Superseded by rev C1, kept for boards in the field |
+| [echo-solo-c](echo-solo-c) | Esparagus Solo C1, the IKEA KALLSUP replacement PCB | Current |
+| [echo-solo-b](echo-solo-b) | Esparagus Solo rev B, the boxed device | Current |
 | [echo-duo-b](echo-duo-b) | Esparagus Duo rev B | Current |
 | [echo-duo-a](echo-duo-a) | Esparagus Duo rev A | Prototype |
 
-Rev C1 adds battery power, the power and charge sense inputs, and the top-panel button, and moves the RGB LED to GPIO10. See the [pinout tables](../../README.md#boards-pinout) in the top-level README.
+Solo C1 is a drop-in replacement for the board inside an IKEA KALLSUP Bluetooth speaker, so it reuses the speaker's battery, driver, LED position and buttons. Compared to rev B it adds battery and power sensing plus the action button, and moves the RGB LED to GPIO10. See the [pinout tables](../../README.md#boards-pinout) in the top-level README.
 
 ## Which config do I need
 
@@ -48,15 +48,17 @@ Audio and voice:
 | `media-player.yaml` | Home Assistant media player |
 | `voice-assist.yaml`, `voice-assist-sendspin.yaml` | Wake word, voice pipeline and LED feedback |
 
-Rev C1 hardware:
+Solo C1 hardware:
 
 | Package | Purpose |
 | --- | --- |
 | `battery.yaml` | Battery voltage and level, external power and charging status |
-| `voice-assist-addon-button.yaml` | Top-panel button on the voice assistant configs |
-| `sendspin-addon-button.yaml` | Top-panel button on the media-only configs |
+| `voice-assist-addon-button.yaml` | Action button on the voice assistant configs |
+| `sendspin-addon-button.yaml` | Action button on the media-only configs |
 
 The two button packages are mutually exclusive, since both define the button, the event entity and the `Disable physical controls` switch. Use the voice assistant one wherever a pipeline exists.
+
+The gestures are ordinary `on_multi_click` entries, so a board config can add one of its own with `!extend` on `center_button`. Lists merge by appending, so a new gesture is added to the shipped four rather than replacing them; pick timings that do not overlap.
 
 The `*-addon-*` packages extend a base package rather than standing on their own, so each one needs its base package in the same config.
 

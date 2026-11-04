@@ -8,7 +8,9 @@
 
 Esparagus Echo is a series of two ESP32-S3-based voice control edge devices. They are designed to work with [ESPHome](https://esphome.io) as an edge part of the voice control pipeline. Both devices are enclosed in a neat-looking aluminum case and expose feedback LEDs on the front panel where it is easy to spot them, leaving power and speaker connectors on the backside. 
 
-> **Esparagus Solo is now on revision C1**, which replaces the earlier rev B board. Besides the usual fixes, it adds battery power with charge and external-power monitoring, and a physical button on the top panel for talk-to-assistant and media control. Rev B remains documented below for the boards already in the field.
+> **New: Esparagus Solo C1 is a drop-in replacement PCB for the IKEA KALLSUP Bluetooth speaker.** Swap the original board for it and the speaker keeps its battery, its driver, its LED and its buttons, but gains announcements, multi-room music and a voice assistant through Home Assistant. See [Esparagus Solo C1](#esparagus-solo-c1-ikea-kallsup-retrofit).
+>
+> The boxed Esparagus Solo (rev B) remains available and is documented below. It will be sunset eventually, but not yet.
 
 
 ## Table of Contents
@@ -18,22 +20,22 @@ Esparagus Echo is a series of two ESP32-S3-based voice control edge devices. The
   - [Why Esparagus](#why-esparagus)
   - [Motivation](#motivation)
   - [Esparagus Solo](#esparagus-solo)
-    - [What is new in rev C1](#what-is-new-in-rev-c1)
+  - [Esparagus Solo C1 (IKEA KALLSUP retrofit)](#esparagus-solo-c1-ikea-kallsup-retrofit)
   - [Esparagus Duo](#esparagus-duo)
   - [Which device is right for me](#which-device-is-right-for-me)
   - [Features](#features)
   - [Boards Pinout](#boards-pinout)
     - [Peripheral - Common](#peripheral---common)
       - [Rev A (prototypes)](#rev-a-prototypes)
-      - [Rev B (legacy)](#rev-b-legacy)
-      - [Rev C1 (distribution)](#rev-c1-distribution)
-    - [Peripheral - Battery and Power (Solo rev C1)](#peripheral---battery-and-power-solo-rev-c1)
+      - [Rev B (distribution)](#rev-b-distribution)
+      - [Rev C1 (KALLSUP retrofit)](#rev-c1-kallsup-retrofit)
+    - [Peripheral - Battery and Power (Solo C1)](#peripheral---battery-and-power-solo-c1)
     - [Peripheral - W5500 Ethernet](#peripheral---w5500-ethernet)
   - [Software](#software)
     - [Home Assistant - media player](#home-assistant---media-player)
     - [Home Assistant - voice assistant](#home-assistant---voice-assistant)
-    - [Button controls (Solo rev C1)](#button-controls-solo-rev-c1)
-    - [Battery and power entities (Solo rev C1)](#battery-and-power-entities-solo-rev-c1)
+    - [Button controls (Solo C1)](#button-controls-solo-c1)
+    - [Battery and power entities (Solo C1)](#battery-and-power-entities-solo-c1)
     - [ESPHome - initial flashing](#esphome---initial-flashing)
     - [Walkie Talkie firmware](#walkie-talkie-firmware)
   - [Hardware](#hardware)
@@ -51,22 +53,41 @@ I'm a big fan of Alexa. I'm using it around the house, and my family is using it
 
 ## Esparagus Solo
 
-Esparagus Solo has all the basic necessities, a Mic on the front panel, a feedback LED, and a speaker at the back. Onboard is a simple and well-known MAX98357 DAC with a reasonable 5W output audio. From rev C1 it also runs on battery, and carries a button on the top panel so you can talk to the assistant or control playback without a phone or a voice command.
+Esparagus Solo has all the basic necessities, a Mic on the front panel, a couple of feedback LEDs, and a speaker at the back. Onboard is a simple and well-known MAX98357 DAC with a reasonable 5W output audio. That's pretty much it.
 
 ![DSC_0108](https://github.com/user-attachments/assets/b4957751-f71e-4a23-b3bd-ac48bdb77a90)
 
-### What is new in rev C1
+This is the boxed product, currently on rev B, and its configs live in [firmware/esphome/echo-solo-b](/firmware/esphome/echo-solo-b).
 
-Rev C1 replaces rev B as the shipping Esparagus Solo. Rev B boards keep working with the configs in [firmware/esphome/echo-solo-b](/firmware/esphome/echo-solo-b), which are kept in the repository.
+## Esparagus Solo C1 (IKEA KALLSUP retrofit)
 
-| Change | Rev B | Rev C1 |
-|---|---|---|
-| Power | 5V USB-C only | 5V USB-C or single-cell Li-ion battery |
-| Battery monitoring | none | Battery voltage, charge status, external power presence |
-| Front LED | 2x RGB LED on GPIO42 | 1x RGB LED on GPIO10 |
-| Controls | none | Button on the top panel (GPIO0) |
+Solo C1 is the same idea in a different shape: instead of a boxed device of its own, it is a **drop-in replacement PCB for the IKEA KALLSUP Bluetooth speaker**. Take the KALLSUP apart, lift out the original board, drop this one in, and the speaker becomes a Home Assistant device with announcements, multi-room music and a voice assistant, while staying the speaker it was.
 
-> 📷 _Image placeholders: Esparagus Solo rev C1 top panel, showing the button next to the LED; and the board with the battery fitted, case open._
+The board is laid out to reuse what is already in the enclosure, so the retrofit needs no rewiring and no glue:
+
+| Part of the speaker | How Solo C1 uses it |
+| --- | --- |
+| Battery and its connector | Same connector and polarity. The board charges the cell and reports voltage, charge state and whether external power is present |
+| Speaker driver and its connector | Same connector, driven by the onboard MAX98357 DAC |
+| RGB LED | Sits in the original position on the PCB, so it lines up with the enclosure's light pipe |
+| Buttons | Both original buttons are kept. One powers the speaker on and off, the other is yours to define in YAML |
+| USB-C port | Charging and power, as before |
+
+What you gain over the stock speaker:
+
+- **Voice assistant** with on-device wake word detection, through the Home Assistant voice pipeline
+- **Announcements**, so automations can speak through the speaker
+- **Multi-room music** via Music Assistant, synchronised with other Esparagus devices
+- **A scriptable button**, exposed to Home Assistant as an event entity
+
+> 📷 _Image placeholders needed for this section:_
+>
+> 1. _The stock IKEA KALLSUP speaker, as bought, for recognition._
+> 2. _The speaker opened up, with the original PCB still in place, so the two boards can be compared._
+> 3. _Solo C1 board alone, top side, with battery and speaker connectors and the RGB LED position called out._
+> 4. _Solo C1 fitted inside the KALLSUP enclosure, before closing it._
+> 5. _The assembled speaker running, LED lit, ideally mid-voice-interaction._
+> 6. _Close-up of the two buttons on the assembled speaker, to show which is power and which is the action button._
 
 ## Esparagus Duo
 
@@ -80,24 +101,24 @@ On top of Solo capabilities, Esparagus Duo uses a dual Mic setup, extra LED, and
 
 ## Features
 
-|  | Esparagus Solo (rev C1) | Esparagus Duo |
-|---|---|---|
-| Image | ![DSC_0108](https://github.com/user-attachments/assets/b4957751-f71e-4a23-b3bd-ac48bdb77a90) <br/> 📷 _rev C1 photo pending_ | ![DSC_0015](https://github.com/user-attachments/assets/fa25aedf-96f9-48c8-bf72-99b5bf84d71a) |
-| MCU | ESP32-S3-WROOM-1-N16R8 module | ESP32-S3-WROOM-1U-N16R8 module |
-| MIC | Single [TDK InvenSense ICS-43434](https://invensense.tdk.com/products/ics-43434/) I2S MEMS Mic | Dual [TDK InvenSense ICS-43434](https://invensense.tdk.com/products/ics-43434/) I2S MEMS Mic |
-| DAC | Single I2S DAC ([MAX98357](https://www.analog.com/en/products/max98357a.html)) with built-in D-Class amp | Dual I2S DAC ([MAX98357](https://www.analog.com/en/products/max98357a.html)) with built-in D-Class amp |
-| Power | 5V from USB-C (Up to 1.5A) or single-cell Li-ion battery | 5V from USB-C (Up to 2.5A) |
-| Battery monitoring | Battery voltage, charge status, external power presence | none |
-| Controls | Button on the top panel | none |
-| Output, 4Ω | 3W | 2x 3W |
-| Output, 8Ω | 5W | 2x 5W |
-| PSRAM | 8MB PSRAM | 8MB PSRAM |
-| Peripheral | 1x XL1615 RGB LED | 3x XL1615 RGB LED |
-| Wireless Connectivity | WiFi + BLE <br/> External antenna | WiFi + BLE <br/> External antenna |
-| Ethernet | none | Wizznet W5500 SPI Ethernet |
-| Size (excl. antenna) | 70 x 24 x 88 mm | 70 x 24 x 88 mm |
-
-Rev B Solo boards differ in three places: they carry 2x XL1615 RGB LED on GPIO42, have no button, and run from USB-C only.
+|  | Esparagus Solo (rev B) | Esparagus Solo C1 | Esparagus Duo |
+|---|---|---|---|
+| Form factor | Boxed device | Replacement PCB for IKEA KALLSUP | Boxed device |
+| Image | ![DSC_0108](https://github.com/user-attachments/assets/b4957751-f71e-4a23-b3bd-ac48bdb77a90) | 📷 _placeholder: Solo C1 board, top side_ | ![DSC_0015](https://github.com/user-attachments/assets/fa25aedf-96f9-48c8-bf72-99b5bf84d71a) |
+| MCU | ESP32-S3-WROOM-1-N16R8 module | ESP32-S3-WROOM-1-N16R8 module | ESP32-S3-WROOM-1U-N16R8 module |
+| MIC | Single [TDK InvenSense ICS-43434](https://invensense.tdk.com/products/ics-43434/) I2S MEMS Mic | Single [TDK InvenSense ICS-43434](https://invensense.tdk.com/products/ics-43434/) I2S MEMS Mic | Dual [TDK InvenSense ICS-43434](https://invensense.tdk.com/products/ics-43434/) I2S MEMS Mic |
+| DAC | Single I2S DAC ([MAX98357](https://www.analog.com/en/products/max98357a.html)) with built-in D-Class amp | Single I2S DAC ([MAX98357](https://www.analog.com/en/products/max98357a.html)) with built-in D-Class amp | Dual I2S DAC ([MAX98357](https://www.analog.com/en/products/max98357a.html)) with built-in D-Class amp |
+| Power | 5V from USB-C (Up to 1.5A) | 5V from USB-C, or the KALLSUP battery | 5V from USB-C (Up to 2.5A) |
+| Battery monitoring | none | Battery voltage, charge status, external power presence | none |
+| Controls | none | Power button and a scriptable action button | none |
+| Speaker | Onboard, at the back | The KALLSUP driver, original connector | Onboard, at the back |
+| Output, 4Ω | 3W | 3W | 2x 3W |
+| Output, 8Ω | 5W | 5W | 2x 5W |
+| PSRAM | 8MB PSRAM | 8MB PSRAM | 8MB PSRAM |
+| Peripheral | 2x XL1615 RGB LED | 1x RGB LED, in the original KALLSUP position | 3x XL1615 RGB LED |
+| Wireless Connectivity | WiFi + BLE <br/> External antenna | WiFi + BLE | WiFi + BLE <br/> External antenna |
+| Ethernet | none | none | Wizznet W5500 SPI Ethernet |
+| Size (excl. antenna) | 70 x 24 x 88 mm | Fits the KALLSUP enclosure | 70 x 24 x 88 mm |
 
 ## Boards Pinout
 
@@ -110,24 +131,24 @@ Rev B Solo boards differ in three places: they carry 2x XL1615 RGB LED on GPIO42
 | Echo Solo | 14      | 16       | 21      | 15       | 17        |  42
 | Echo Duo  | 14      | 16       | 21      | 15       | 17        |  42
 
-#### Rev B (legacy)
+#### Rev B (distribution)
 
-Still current for Echo Duo. Superseded by rev C1 on Echo Solo.
+Current for both boxed devices, Echo Solo and Echo Duo.
 
 |           | I2S CLK (OUT) | I2S DATA (OUT) | I2S WS (OUT) | I2S CLK (IN) | I2S DATA (IN) | I2S WS (IN) | DAC CE | RGB LED |
 |-----------|---------------|----------------|--------------|--------------|---------------|-------------|--------|---------|
 | Echo Solo | 18            | 17             | 8            | 16           | 15            | 7           |  9     |  42     |
 | Echo Duo  | 18            | 17             | 8            | 16           | 15            | 7           |  9     |  42     |
 
-#### Rev C1 (distribution)
+#### Rev C1 (KALLSUP retrofit)
 
-The audio pins are unchanged from rev B. The RGB LED moves off GPIO42 to free that pin, and the button, battery and power inputs are new.
+The audio pins are unchanged from rev B. The RGB LED moves to GPIO10 because it has to sit where the KALLSUP light pipe expects it, and the action button, battery sense and power sense inputs are new.
 
-|           | I2S CLK (OUT) | I2S DATA (OUT) | I2S WS (OUT) | I2S CLK (IN) | I2S DATA (IN) | I2S WS (IN) | DAC CE | RGB LED | BUTTON |
-|-----------|---------------|----------------|--------------|--------------|---------------|-------------|--------|---------|--------|
-| Echo Solo | 18            | 17             | 8            | 16           | 15            | 7           |  9     |  10     |  0     |
+|              | I2S CLK (OUT) | I2S DATA (OUT) | I2S WS (OUT) | I2S CLK (IN) | I2S DATA (IN) | I2S WS (IN) | DAC CE | RGB LED | ACTION BTN |
+|--------------|---------------|----------------|--------------|--------------|---------------|-------------|--------|---------|------------|
+| Echo Solo C1 | 18            | 17             | 8            | 16           | 15            | 7           |  9     |  10     |  0         |
 
-### Peripheral - Battery and Power (Solo rev C1)
+### Peripheral - Battery and Power (Solo C1)
 
 |                  | Pin | Type          | Notes                                                                      |
 |------------------|-----|---------------|----------------------------------------------------------------------------|
@@ -181,9 +202,16 @@ All in all, wakeword started to work flawlessly in revision B, and although it i
 
 Please look at [this config](/firmware/esphome/echo-duo-b/echo-duo-b-idf-voice-assist.yaml) to make it work. Note that it will also require to configure Home Assistant properly, you may use [this official guide](https://www.home-assistant.io/voice_control/), [Seeeds docs](https://wiki.seeedstudio.com/respeaker_lite_ha/) or community created [Youtube tutorial](https://www.youtube.com/watch?v=VAFDgib95Ls)
 
-### Button controls (Solo rev C1)
+### Button controls (Solo C1)
 
-The top-panel button follows the gestures of the [Home Assistant Voice PE](https://github.com/esphome/home-assistant-voice-pe) center button, so muscle memory carries over between the two devices.
+The KALLSUP keeps both of its buttons, with one role each:
+
+| Button | Role |
+| --- | --- |
+| Power | Switches the speaker on and off, as it did before the retrofit |
+| Action | Whatever you define in YAML. Wired to GPIO0 and handled by ESPHome |
+
+The action button ships with the gestures of the [Home Assistant Voice PE](https://github.com/esphome/home-assistant-voice-pe) center button, so muscle memory carries over between the two devices. Replacing them means editing one package, [voice-assist-addon-button.yaml](/firmware/esphome/packages/voice-assist-addon-button.yaml) or [sendspin-addon-button.yaml](/firmware/esphome/packages/sendspin-addon-button.yaml), where each gesture is a plain ESPHome `on_multi_click` entry.
 
 On the voice assistant configs:
 
@@ -205,9 +233,40 @@ On the plain media player configs, where there is no pipeline to talk to:
 
 The double, triple and long presses are published to Home Assistant as a `Button press` event entity, so you can hang automations off them. The single click is not exposed, because it drives the device itself. A `Disable physical controls` switch turns the button off entirely, and is hidden by default.
 
-> 📷 _Image placeholder: Home Assistant device page for Solo rev C1, showing the Button press event entity and the battery sensors._
+There are two ways to put the action button to work. The first keeps the firmware untouched: listen for the `Button press` event in a Home Assistant automation and do anything HA can do.
 
-### Battery and power entities (Solo rev C1)
+```yaml
+automation:
+  - trigger:
+      - platform: state
+        entity_id: event.esparagus_echo_solo_button_press
+        attribute: event_type
+        to: double_press
+    action:
+      - action: light.toggle
+        target:
+          entity_id: light.kitchen
+```
+
+The second runs on the device itself, which keeps working when Home Assistant is down. Extend the button from your board config and add a gesture of your own:
+
+```yaml
+binary_sensor:
+  - id: !extend center_button
+    on_multi_click:
+      - timing:
+          - ON for at least 3s
+        then:
+          - switch.toggle: relay_in_the_hallway
+```
+
+Anything ESPHome can do as an action belongs here: GPIO, a script, an HA service call, a TTS announcement, a scene.
+
+Note that `!extend` **appends** to the gesture list rather than replacing it, so pick a timing that does not overlap one of the four above, or the overlapping gestures will both match. To change or drop a shipped gesture, edit the package itself.
+
+> 📷 _Image placeholder: the Home Assistant device page for a retrofitted KALLSUP, showing the Button press event entity next to the battery sensors._
+
+### Battery and power entities (Solo C1)
 
 Running on battery adds four entities:
 
@@ -241,22 +300,22 @@ More details [here](/firmware/esp32-walkie-talkie/)
 
 Please visit [hardware](/hardware/) section for board schematics and PCB designs. Note that PCBs are shared as multi-layer PDFs as well as Gerber archives.
 
-Rev A and Rev B files are published there. The Rev C1 schematic and PCB will be added once the revision is released.
+Rev A and Rev B files are published there. The Solo C1 schematic and PCB, including the KALLSUP connector placement and board outline, will be added once the revision is released.
 
 ### Boxed
 
 
-| Esparagus Solo (Prototype) | Esparagus Solo (rev B) | Esparagus Solo (rev C1) | Esparagus Duo  | 
+| Esparagus Solo (Prototype) | Esparagus Solo (rev B) | Esparagus Solo C1 (in a KALLSUP) | Esparagus Duo  | 
 |---|---|---|---|
-| ![image](https://github.com/user-attachments/assets/b650bccd-84e5-4a5e-81ac-86187e45e2ef) | ![image](https://github.com/user-attachments/assets/9cae5e9d-4d7e-48bd-a289-85b84be51282) | 📷 _placeholder: boxed rev C1, top panel with button_ | ![image](https://github.com/user-attachments/assets/fe4e7137-e51a-4827-b44d-3520adf3159f) 
-| ![image](https://github.com/user-attachments/assets/ad078714-8822-4c29-ad7d-3a537a74fca6) | ![image](https://github.com/user-attachments/assets/de751a1a-3c80-434c-8a80-8177ae99a032) | 📷 _placeholder: boxed rev C1, back panel_ | ![image](https://github.com/user-attachments/assets/5e5fd427-333e-4336-872e-6a40ef548f83)
+| ![image](https://github.com/user-attachments/assets/b650bccd-84e5-4a5e-81ac-86187e45e2ef) | ![image](https://github.com/user-attachments/assets/9cae5e9d-4d7e-48bd-a289-85b84be51282) | 📷 _placeholder: the retrofitted KALLSUP assembled and running, LED lit_ | ![image](https://github.com/user-attachments/assets/fe4e7137-e51a-4827-b44d-3520adf3159f) 
+| ![image](https://github.com/user-attachments/assets/ad078714-8822-4c29-ad7d-3a537a74fca6) | ![image](https://github.com/user-attachments/assets/de751a1a-3c80-434c-8a80-8177ae99a032) | 📷 _placeholder: the same speaker from the button side, power and action buttons visible_ | ![image](https://github.com/user-attachments/assets/5e5fd427-333e-4336-872e-6a40ef548f83)
 
 
 ### PCB
 
-| Esparagus Solo (Prototype) | Esparagus Solo (rev B) | Esparagus Solo (rev C1) | Esparagus Duo  | 
+| Esparagus Solo (Prototype) | Esparagus Solo (rev B) | Esparagus Solo C1 | Esparagus Duo  | 
 |---|---|---|---|
-| ![image](https://github.com/user-attachments/assets/761b231c-c5f4-4479-b12b-1be4ae2b4831) | ![image](https://github.com/user-attachments/assets/60ff9542-6a02-4ac6-8828-350baf6fede7) | 📷 _placeholder: rev C1 PCB, battery connector and charger visible_ | ![image](https://github.com/user-attachments/assets/9561e312-61d7-4463-8947-f37b56da8db0)
+| ![image](https://github.com/user-attachments/assets/761b231c-c5f4-4479-b12b-1be4ae2b4831) | ![image](https://github.com/user-attachments/assets/60ff9542-6a02-4ac6-8828-350baf6fede7) | 📷 _placeholder: bare Solo C1 PCB next to the original KALLSUP board, same orientation_ | ![image](https://github.com/user-attachments/assets/9561e312-61d7-4463-8947-f37b56da8db0)
 
 ## Where to buy
 
