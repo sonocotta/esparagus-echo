@@ -10,7 +10,7 @@
 # ============================================================
 
 substitutions:
-  name: esphome-web-a87b40
+  name: echo-duo
   friendly_name: Esparagus-Echo-Duo
   task_stack_in_psram: "true"
   
@@ -46,7 +46,7 @@ substitutions:
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
-  min_version: 2026.2.1
+  min_version: 2026.10.0
   name_add_mac_suffix: false
   platformio_options:
     board_build.flash_mode: dio

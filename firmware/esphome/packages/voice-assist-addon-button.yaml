@@ -1,0 +1,119 @@
+# ============================================================
+# Voice Assist Addon - Physical Button
+# ============================================================
+# Single front/top button, modelled on the Home Assistant Voice PE
+# center button (same GPIO0 pin, same multi-click structure).
+#
+#   Single click  - abort-or-start the voice assistant (shared cascade)
+#   Double click  - next track + "double_press" event
+#   Triple click  - "triple_press" event
+#   Long press    - toggle the voice assistant (mic mute) + "long_press" event
+#
+# Double/triple/long are exposed as an event entity for Home Assistant
+# automations. The single click is not: it drives the device itself.
+#
+# Requires: voice-assist-sendspin.yaml (start_voice_assist, reset_led,
+# play_sound, use_wake_word, init_in_progress) and a media player.
+#
+# Substitutions:
+#   - button_pin: GPIO0 (strapping pin, has a hardware pullup, active low)
+# ============================================================
+
+substitutions:
+  button_pin: GPIO0
+
+binary_sensor:
+  - platform: gpio
+    id: center_button
+    # GPIO0 is a strapping pin and carries the hardware pullup required for
+    # that role, so no internal pullup is configured here. Note that holding
+    # it low across a reset puts the ESP32-S3 into download mode, which is
+    # why there is no hold-through-reboot gesture.
+    pin:
+      number: ${button_pin}
+      inverted: true
+    on_multi_click:
+      # Single click: abort whatever is active, or start the pipeline.
+      - timing:
+          - ON for at most 1s
+          - OFF for at least 0.25s
+        then:
+          - if:
+              condition:
+                and:
+                  - switch.is_off: disable_buttons
+                  - lambda: return !id(init_in_progress);
+              then:
+                - script.execute: start_voice_assist
+      # Double click: skip to the next track, and report to Home Assistant.
+      - timing:
+          - ON for at most 1s
+          - OFF for at most 0.25s
+          - ON for at most 1s
+          - OFF for at least 0.25s
+        then:
+          - if:
+              condition:
+                and:
+                  - switch.is_off: disable_buttons
+                  - lambda: return !id(init_in_progress);
+              then:
+                - media_player.next:
+                    id: external_media_player
+                - event.trigger:
+                    id: button_press_event
+                    event_type: "double_press"
+      # Triple click: reported to Home Assistant only.
+      - timing:
+          - ON for at most 1s
+          - OFF for at most 0.25s
+          - ON for at most 1s
+          - OFF for at most 0.25s
+          - ON for at most 1s
+          - OFF for at least 0.25s
+        then:
+          - if:
+              condition:
+                and:
+                  - switch.is_off: disable_buttons
+                  - lambda: return !id(init_in_progress);
+              then:
+                - event.trigger:
+                    id: button_press_event
+                    event_type: "triple_press"
+      # Long press: mute/unmute the assistant. This board has no hardware
+      # mute switch, so the gesture stands in for the Voice PE slide switch.
+      - timing:
+          - ON for at least 1s
+        then:
+          - if:
+              condition:
+                and:
+                  - switch.is_off: disable_buttons
+                  - lambda: return !id(init_in_progress);
+              then:
+                - switch.toggle: use_wake_word
+                - event.trigger:
+                    id: button_press_event
+                    event_type: "long_press"
+
+switch:
+  - platform: template
+    id: disable_buttons
+    name: "${friendly_name} Disable physical controls"
+    icon: "mdi:button-pointer"
+    entity_category: config
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    disabled_by_default: true
+
+event:
+  - platform: template
+    id: button_press_event
+    name: "${friendly_name} Button press"
+    icon: mdi:button-pointer
+    device_class: button
+    event_types:
+      - double_press
+      - triple_press
+      - long_press

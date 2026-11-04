@@ -70,55 +70,7 @@ micro_wake_word:
     - model: ${wake_word}
   microphone: voice_assistant_mic
   on_wake_word_detected:
-    - if:
-        condition:
-          switch.is_on: use_wake_word
-        then:
-          - light.turn_on:
-              id: rgb_front_led
-              blue: 0%
-              red: 0%
-              green: 100%
-              brightness: 75%
-              effect: "Slow Pulse"
-          - if:
-              condition:
-                switch.is_on: timer_ringing
-              then:
-                - switch.turn_off: timer_ringing
-                - micro_wake_word.start:
-              else:
-                - if:
-                    condition:
-                      switch.is_off: ducking_switch
-                    then:
-                      media_player.stop:
-                        id: external_media_player
-                - if:
-                    condition:
-                      voice_assistant.is_running:
-                    then:
-                      voice_assistant.stop:
-                    else:
-                      - if:
-                          condition:
-                            media_player.is_announcing:
-                              id: external_media_player
-                          then:
-                            - media_player.stop:
-                                id: external_media_player
-                                announcement: true
-                          else:
-                            - if:
-                                condition:
-                                  switch.is_on: wake_sound
-                                then:
-                                  - script.execute:
-                                      id: play_sound
-                                      priority: true
-                                      sound_file: "wake_word_triggered_sound"
-                                  - delay: 300ms
-                            - voice_assistant.start:
+    - script.execute: start_voice_assist
 
 voice_assistant:
   id: va
@@ -212,6 +164,61 @@ voice_assistant:
     - switch.turn_on: timer_ringing
 
 script:
+  # Abort-or-start cascade, shared by the wake word and the physical button.
+  # Stops exactly one thing, in priority order (ringing timer, running pipeline,
+  # announcement), and only starts a new pipeline when nothing was active.
+  - id: start_voice_assist
+    then:
+      - if:
+          condition:
+            switch.is_on: use_wake_word
+          then:
+            - light.turn_on:
+                id: rgb_front_led
+                blue: 0%
+                red: 0%
+                green: 100%
+                brightness: 75%
+                effect: "Slow Pulse"
+            - if:
+                condition:
+                  switch.is_on: timer_ringing
+                then:
+                  - switch.turn_off: timer_ringing
+                  - micro_wake_word.start:
+                else:
+                  - if:
+                      condition:
+                        switch.is_off: ducking_switch
+                      then:
+                        media_player.stop:
+                          id: external_media_player
+                  - if:
+                      condition:
+                        voice_assistant.is_running:
+                      then:
+                        voice_assistant.stop:
+                      else:
+                        - if:
+                            condition:
+                              media_player.is_announcing:
+                                id: external_media_player
+                            then:
+                              - media_player.stop:
+                                  id: external_media_player
+                                  announcement: true
+                            else:
+                              - if:
+                                  condition:
+                                    switch.is_on: wake_sound
+                                  then:
+                                    - script.execute:
+                                        id: play_sound
+                                        priority: true
+                                        sound_file: "wake_word_triggered_sound"
+                                    - delay: 300ms
+                              - voice_assistant.start:
+
   - id: reset_led
     then:
       - if:
