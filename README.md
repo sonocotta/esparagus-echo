@@ -108,7 +108,7 @@ On top of the Solo capabilities, Esparagus Duo uses a dual-mic setup, an extra L
 |---|---|---|---|
 | Form factor | Boxed device | Replacement PCB for IKEA KALLSUP | Boxed device |
 | Image | ![DSC_0108](https://github.com/user-attachments/assets/b4957751-f71e-4a23-b3bd-ac48bdb77a90) | <img width="800" height="764" alt="Solo C1 board, top side, with SPK and LIPO connectors, USB-C and the ESP32-S3 module" src="https://github.com/user-attachments/assets/2ec257a8-15cc-4c06-bfc9-f786eb56bad3" /> | ![DSC_0015](https://github.com/user-attachments/assets/fa25aedf-96f9-48c8-bf72-99b5bf84d71a) |
-| MCU | ESP32-S3-WROOM-1-N16R8 module | ESP32-S3-WROOM-1-N16R8 module | ESP32-S3-WROOM-1U-N16R8 module |
+| MCU | ESP32-S3-WROOM-1-N8R8 module | ESP32-S3-WROOM-1-N8R8 module | ESP32-S3-WROOM-1U-N8R8 module |
 | MIC | Single [TDK InvenSense ICS-43434](https://invensense.tdk.com/products/ics-43434/) I2S MEMS Mic | Single [TDK InvenSense ICS-43434](https://invensense.tdk.com/products/ics-43434/) I2S MEMS Mic | Dual [TDK InvenSense ICS-43434](https://invensense.tdk.com/products/ics-43434/) I2S MEMS Mic |
 | DAC | Single I2S DAC ([MAX98357](https://www.analog.com/en/products/max98357a.html)) with built-in D-Class amp | Single I2S DAC ([MAX98357](https://www.analog.com/en/products/max98357a.html)) with built-in D-Class amp | Dual I2S DAC ([MAX98357](https://www.analog.com/en/products/max98357a.html)) with built-in D-Class amp |
 | Power | 5V from USB-C (Up to 1.5A) | 5V from USB-C, or the KALLSUP battery | 5V from USB-C (Up to 2.5A) |
@@ -122,6 +122,8 @@ On top of the Solo capabilities, Esparagus Duo uses a dual-mic setup, an extra L
 | Wireless Connectivity | Wi-Fi + BLE <br/> External antenna | Wi-Fi + BLE <br/> PCB antenna | Wi-Fi + BLE <br/> External antenna |
 | Ethernet | none | none | WIZnet W5500 SPI Ethernet |
 | Size (excl. antenna) | 70 x 24 x 88 mm | Fits the KALLSUP enclosure | 70 x 24 x 88 mm |
+
+All current and future boards carry the N8R8 module, with 8MB of flash and 8MB of PSRAM, which is what the ESPHome configs here are built for. Some early boards shipped with the 16MB N16R8 variant instead. They keep working with the same configs, using 8MB of the flash they have.
 
 ## Boards Pinout
 
