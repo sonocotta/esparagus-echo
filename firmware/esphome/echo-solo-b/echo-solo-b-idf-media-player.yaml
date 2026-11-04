@@ -10,7 +10,7 @@
 # ============================================================
 
 substitutions:
-  name: esphome-web-a86afc
+  name: echo-solo
   friendly_name: Esparagus-Echo-Solo
   task_stack_in_psram: "true"
 

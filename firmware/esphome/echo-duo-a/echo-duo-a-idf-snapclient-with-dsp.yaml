@@ -14,7 +14,7 @@
 # ============================================================
 
 substitutions:
-  name: esphome-web-47a438
+  name: echo-duo
   friendly_name: Esparagus-Echo-Duo
   task_stack_in_psram: "true"
 

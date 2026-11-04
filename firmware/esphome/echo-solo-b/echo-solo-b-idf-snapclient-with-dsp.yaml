@@ -13,7 +13,7 @@
 # Functional blocks imported from /packages
 # ============================================================
 substitutions:
-  name: esphome-web-a87b38
+  name: echo-solo
   friendly_name: Esparagus-Echo-Solo
   task_stack_in_psram: "true"
 
