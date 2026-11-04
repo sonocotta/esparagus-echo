@@ -80,18 +80,15 @@ What you gain over the stock speaker:
 - **Multi-room music** via Music Assistant, synchronised with other Esparagus devices
 - **A scriptable button**, exposed to Home Assistant as an event entity
 
-> 📷 _Image placeholders needed for this section:_
->
-> 1. _The stock IKEA KALLSUP speaker, as bought, for recognition._
-> 2. _The speaker opened up, with the original PCB still in place, so the two boards can be compared._
-> 3. _Solo C1 board alone, top side, with battery and speaker connectors and the RGB LED position called out._
-> 4. _Solo C1 fitted inside the KALLSUP enclosure, before closing it._
-> 5. _The assembled speaker running, LED lit, ideally mid-voice-interaction._
-> 6. _Close-up of the two buttons on the assembled speaker, to show which is power and which is the action button._
+<img width="896" height="1131" alt="image" src="https://github.com/user-attachments/assets/6af69138-d9c3-4e25-948d-b9f76ea38b7d" />
+
+<img width="775" height="1096" alt="image" src="https://github.com/user-attachments/assets/04475e03-4caa-414b-b444-3f109d0aa890" />
+
+<img width="885" height="1145" alt="image" src="https://github.com/user-attachments/assets/abf2561a-4ff7-470d-bd26-3b05e7e9c77e" />
 
 ## Esparagus Duo
 
-On top of Solo capabilities, Esparagus Duo uses a dual Mic setup, extra LED, and most importantly 2-channels MAX98357 channels to deliver quality stereo-audio (and thus can be used as a media player device). To make sure it would stream audio without a hiccup it uses an external Wifi antenna (much-improved perception) and has SPI Ethernet for the most robust networking. 
+On top of Solo capabilities, Esparagus Duo uses a dual-mic setup, extra LED, and, most importantly, 2-channel MAX98357 channels to deliver quality stereo-audio (and thus can be used as a media player device). To make sure it would stream audio without a hiccup it uses an external Wifi antenna (much-improved perception) and has SPI Ethernet for the most robust networking. 
 
 ![DSC_0015](https://github.com/user-attachments/assets/fa25aedf-96f9-48c8-bf72-99b5bf84d71a)
 
@@ -104,7 +101,7 @@ On top of Solo capabilities, Esparagus Duo uses a dual Mic setup, extra LED, and
 |  | Esparagus Solo (rev B) | Esparagus Solo C1 | Esparagus Duo |
 |---|---|---|---|
 | Form factor | Boxed device | Replacement PCB for IKEA KALLSUP | Boxed device |
-| Image | ![DSC_0108](https://github.com/user-attachments/assets/b4957751-f71e-4a23-b3bd-ac48bdb77a90) | 📷 _placeholder: Solo C1 board, top side_ | ![DSC_0015](https://github.com/user-attachments/assets/fa25aedf-96f9-48c8-bf72-99b5bf84d71a) |
+| Image | ![DSC_0108](https://github.com/user-attachments/assets/b4957751-f71e-4a23-b3bd-ac48bdb77a90) | <img width="800" height="764" alt="image" src="https://github.com/user-attachments/assets/2ec257a8-15cc-4c06-bfc9-f786eb56bad3" /> | ![DSC_0015](https://github.com/user-attachments/assets/fa25aedf-96f9-48c8-bf72-99b5bf84d71a) |
 | MCU | ESP32-S3-WROOM-1-N16R8 module | ESP32-S3-WROOM-1-N16R8 module | ESP32-S3-WROOM-1U-N16R8 module |
 | MIC | Single [TDK InvenSense ICS-43434](https://invensense.tdk.com/products/ics-43434/) I2S MEMS Mic | Single [TDK InvenSense ICS-43434](https://invensense.tdk.com/products/ics-43434/) I2S MEMS Mic | Dual [TDK InvenSense ICS-43434](https://invensense.tdk.com/products/ics-43434/) I2S MEMS Mic |
 | DAC | Single I2S DAC ([MAX98357](https://www.analog.com/en/products/max98357a.html)) with built-in D-Class amp | Single I2S DAC ([MAX98357](https://www.analog.com/en/products/max98357a.html)) with built-in D-Class amp | Dual I2S DAC ([MAX98357](https://www.analog.com/en/products/max98357a.html)) with built-in D-Class amp |
@@ -264,7 +261,7 @@ Anything ESPHome can do as an action belongs here: GPIO, a script, an HA service
 
 Note that `!extend` **appends** to the gesture list rather than replacing it, so pick a timing that does not overlap one of the four above, or the overlapping gestures will both match. To change or drop a shipped gesture, edit the package itself.
 
-> 📷 _Image placeholder: the Home Assistant device page for a retrofitted KALLSUP, showing the Button press event entity next to the battery sensors._
+<img width="1198" height="1070" alt="image" src="https://github.com/user-attachments/assets/59fccb03-7986-495a-ad2c-748fa9cc0bed" />
 
 ### Battery and power entities (Solo C1)
 
@@ -307,15 +304,18 @@ Rev A and Rev B files are published there. The Solo C1 schematic and PCB, includ
 
 | Esparagus Solo (Prototype) | Esparagus Solo (rev B) | Esparagus Solo C1 (in a KALLSUP) | Esparagus Duo  | 
 |---|---|---|---|
-| ![image](https://github.com/user-attachments/assets/b650bccd-84e5-4a5e-81ac-86187e45e2ef) | ![image](https://github.com/user-attachments/assets/9cae5e9d-4d7e-48bd-a289-85b84be51282) | 📷 _placeholder: the retrofitted KALLSUP assembled and running, LED lit_ | ![image](https://github.com/user-attachments/assets/fe4e7137-e51a-4827-b44d-3520adf3159f) 
-| ![image](https://github.com/user-attachments/assets/ad078714-8822-4c29-ad7d-3a537a74fca6) | ![image](https://github.com/user-attachments/assets/de751a1a-3c80-434c-8a80-8177ae99a032) | 📷 _placeholder: the same speaker from the button side, power and action buttons visible_ | ![image](https://github.com/user-attachments/assets/5e5fd427-333e-4336-872e-6a40ef548f83)
+| ![image](https://github.com/user-attachments/assets/b650bccd-84e5-4a5e-81ac-86187e45e2ef) | ![image](https://github.com/user-attachments/assets/9cae5e9d-4d7e-48bd-a289-85b84be51282) | <img width="882" height="990" alt="image" src="https://github.com/user-attachments/assets/d4364a61-4903-4242-abc9-2e4b6b326790" /> | ![image](https://github.com/user-attachments/assets/fe4e7137-e51a-4827-b44d-3520adf3159f) 
+
+| Esparagus Solo (Prototype) | Esparagus Solo (rev B) | Esparagus Solo C1 (in a KALLSUP) | Esparagus Duo  | 
+|---|---|---|---|
+| ![image](https://github.com/user-attachments/assets/ad078714-8822-4c29-ad7d-3a537a74fca6) | ![image](https://github.com/user-attachments/assets/de751a1a-3c80-434c-8a80-8177ae99a032) | <img width="904" height="1132" alt="image" src="https://github.com/user-attachments/assets/c5d29ba3-c587-4dee-884c-db8b21441ec9" /> | ![image](https://github.com/user-attachments/assets/5e5fd427-333e-4336-872e-6a40ef548f83)
 
 
 ### PCB
 
 | Esparagus Solo (Prototype) | Esparagus Solo (rev B) | Esparagus Solo C1 | Esparagus Duo  | 
 |---|---|---|---|
-| ![image](https://github.com/user-attachments/assets/761b231c-c5f4-4479-b12b-1be4ae2b4831) | ![image](https://github.com/user-attachments/assets/60ff9542-6a02-4ac6-8828-350baf6fede7) | 📷 _placeholder: bare Solo C1 PCB next to the original KALLSUP board, same orientation_ | ![image](https://github.com/user-attachments/assets/9561e312-61d7-4463-8947-f37b56da8db0)
+| ![image](https://github.com/user-attachments/assets/761b231c-c5f4-4479-b12b-1be4ae2b4831) | ![image](https://github.com/user-attachments/assets/60ff9542-6a02-4ac6-8828-350baf6fede7) | <img width="699" height="999" alt="image" src="https://github.com/user-attachments/assets/50322396-f69f-4a10-82f2-039074d8ae97" /> | ![image](https://github.com/user-attachments/assets/9561e312-61d7-4463-8947-f37b56da8db0)
 
 ## Where to buy
 
