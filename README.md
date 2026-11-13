@@ -37,6 +37,7 @@ Esparagus Echo is a series of ESP32-S3-based voice control edge devices. They ar
     - [Button controls (Solo C1)](#button-controls-solo-c1)
     - [Battery and power entities (Solo C1)](#battery-and-power-entities-solo-c1)
     - [ESPHome - initial flashing](#esphome---initial-flashing)
+    - [AirPlay 1 \& 2 firmware (Echo Duo)](#airplay-1--2-firmware-echo-duo)
     - [Walkie Talkie firmware](#walkie-talkie-firmware)
   - [Hardware](#hardware)
     - [Boxed](#boxed)
@@ -295,6 +296,26 @@ The ESP32-S3 needs a special routine for the very first ESPHome flash, which was
 | You may press the PREPARE FOR FIRST USE button as usual. | ![image](https://github.com/user-attachments/assets/02387a81-f2be-4218-8278-66c373fbacc8)
 | You will be greeted with `An error occurred. Improv Wi-Fi Serial not detected` error. That's because the device is not able to RESET over USB during the first flashing. Reset it manually using RESET button | ![image](https://github.com/user-attachments/assets/f0d037ba-9c2a-4318-bb28-1fc752c83234)
 | Re-connect to the device and proceed with the initial Wi-Fi configuration | ![image](https://github.com/user-attachments/assets/8bcc6291-dece-4ec7-ae3b-695bf3444308)
+
+### AirPlay 1 & 2 firmware (Echo Duo)
+
+[rbouteiller/airplay-esp32](https://github.com/rbouteiller/airplay-esp32) is a standalone, open-source **AirPlay 1 & 2** receiver for the ESP32 family, and it has a build for the **Esparagus Duo**. It turns the Duo into a plain network speaker without Home Assistant:
+
+- **AirPlay 1 & 2** — appears natively in Control Center and any AirPlay app, with PTP-based multi-room sync
+- **Sendspin** (experimental) — an open multi-room protocol renderer sharing the same output path and volume control as AirPlay
+- Both MAX98357A amplifiers, the RGB status LED and the W5500 Ethernet port are used. The microphones are not, so there's no voice assistant in this firmware.
+
+The easiest way to flash it is the browser-based [web-installer](https://rbouteiller.github.io/airplay-esp32/getting-started/flashing/): pick the **Esparagus Echo** card and flash from desktop Chrome, Edge, or Opera. The ESP32-S3 can't enter flashing mode on its own the first time, so put it there by hand as described in [ESPHome - initial flashing](#esphome---initial-flashing) (hold FLASH, press RESET, release FLASH). Unplug and re-plug it after the install so it boots into setup mode.
+
+To build it yourself, use the `esparagus-echo` PlatformIO environment. The `uploadfs` step is required, or the web UI and setup access point will be missing:
+
+```sh
+git clone --recursive https://github.com/rbouteiller/airplay-esp32 && cd airplay-esp32
+pio run -e esparagus-echo -t upload
+pio run -e esparagus-echo -t uploadfs
+```
+
+The build targets the rev B Duo pinout. The Esparagus Solo and Solo C1 have no dedicated build yet: the Solo C1 moves its RGB LED onto GPIO10, which the Duo build uses for the Ethernet chip select. Rev A prototypes use a different pinout altogether.
 
 ### Walkie Talkie firmware
 
