@@ -182,6 +182,8 @@ Since these devices are designed to be used primarily within a Home Assistant se
 - `media-player` is a plain Home Assistant media player
 - `snapclient` turns the device into a Snapcast client
 
+**Pairing with Music Assistant:** Music Assistant 2.11 and newer can pair with a Sendspin player and may ask for a pairing code. The code appears in Home Assistant as the device's **Sendspin Pairing Code** sensor. Pairing is optional: unpaired (guest) playback keeps working as before. See [Pairing with Music Assistant](/firmware/esphome/README.md#pairing-with-music-assistant) for the steps.
+
 The shared building blocks live in [packages](/firmware/esphome/packages) and are pulled in by each config, so a board only has to declare its own pinout.
 
 ### Home Assistant - media player

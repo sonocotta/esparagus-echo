@@ -7,6 +7,7 @@ ESPHome configurations for the Esparagus Echo boards. There is a folder per boar
 - [Which folder do I need](#which-folder-do-i-need)
 - [Which config do I need](#which-config-do-i-need)
 - [Packages](#packages)
+- [Pairing with Music Assistant](#pairing-with-music-assistant)
 - [Building and flashing](#building-and-flashing)
 - [Secrets](#secrets)
 
@@ -61,6 +62,22 @@ The two button packages are mutually exclusive, since both define the button, th
 The gestures are ordinary `on_multi_click` entries, so a board config can add one of its own with `!extend` on `center_button`. Lists merge by appending, so a new gesture is added to the shipped four rather than replacing them; pick timings that do not overlap.
 
 The `*-addon-*` packages extend a base package rather than standing on their own, so each one needs its base package in the same config.
+
+## Pairing with Music Assistant
+
+Music Assistant 2.11 and newer can *pair* with a Sendspin player, so the player trusts that server from then on. The Sendspin configs support this with a 6-digit pairing code that the device shows in Home Assistant.
+
+**Pairing is optional.** The configs keep unpaired (guest) access on, so Music Assistant can still play on the device without pairing, just as before. You only need the code if you want to pair the player instead of using it as a guest.
+
+To pair a player:
+
+1. Install the current config on the device again, so it gets the new **Sendspin Pairing Code** sensor. The configs pull their packages from GitHub, and ESPHome caches them for up to a day, so on an existing install the sensor can take that long to appear.
+2. Start pairing the player in Music Assistant. When it asks for a pairing code, open the device in Home Assistant (Settings → Devices & services → ESPHome) and read the **Sendspin Pairing Code** sensor.
+3. Enter the 6-digit code in Music Assistant. The sensor clears once pairing is done.
+
+The sensor is empty whenever no pairing is in progress. After 20 wrong codes in a row the device stops accepting new attempts; restart it to try again.
+
+Without Home Assistant there is currently no way to read the code: it isn't logged, and these configs don't show it on a display yet. In that case keep using the player unpaired.
 
 ## Building and flashing
 
