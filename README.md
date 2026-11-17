@@ -325,9 +325,12 @@ Alternative firmware that uses the ESP-NOW protocol for bi-directional communica
 
 ## Hardware
 
-Please visit the [hardware](/hardware/) section for board schematics and PCB designs. Note that PCBs are shared as multi-layer PDFs as well as Gerber archives.
+Please visit the [hardware](/hardware/) section for board schematics and PCB designs. Note that PCBs are shared as multi-layer PDFs as well as Gerber archives. Starting with rev C, each revision also includes a BOM (CSV) and a 3D model (OBJ).
 
-Rev A and Rev B files are published there. The Solo C1 schematic and PCB, including the KALLSUP connector placement and board outline, will be added once the revision is released.
+Files are split by model:
+
+- [Esparagus Solo](/hardware/1-esparagus-echo-solo/): rev A, rev B, rev C and rev C1 (KALLSUP retrofit)
+- [Esparagus Duo](/hardware/2-esparagus-echo-duo/): rev A, rev B and rev C
 
 ### Boxed
 
