@@ -1,0 +1,343 @@
+
+# ============================================================
+# Esparagus-Echo-Solo - Sendspin Player + Source (EXPERIMENTAL)
+# ============================================================
+# Debug build that gives the board *both* Sendspin roles at once:
+#
+#   player  - the usual synchronized playback through the MAX98357A pair,
+#             exactly as in echo-solo-c-idf-sendspin.yaml
+#   source  - the onboard I2S microphone streamed into Music Assistant
+#             as an input
+#
+# Both roles live on the same `sendspin:` hub, so Music Assistant sees one
+# device that it can play *to* and pull audio *from*. That is the point of
+# this config: to find out whether an ESP32-S3 has the CPU, the PSRAM and
+# the Wi-Fi headroom to do both at the same time, and how the mic sounds
+# at all. It is not a product configuration - expect rough edges.
+#
+# What to watch while testing (all on the device page, most of the
+# monitoring entities ship `disabled_by_default` - enable the ones you
+# need, no reflash required):
+#   - Loop Time, Heap Free / Heap Max Block, Free PSRAM, CPU Temperature
+#   - "Mic Source Streaming" - on while the server is pulling from the mic
+#   - "Debug Logging" switch, or the "Log Level" select, for DEBUG logs
+#   - Battery Voltage / Battery Level - duplex streaming is the heaviest
+#     load this board can run, so it is also a worst-case runtime test
+#
+# !! Feedback warning !! Do not route this board's own mic source to this
+# board's own player: the speaker feeds straight back into the mic, and on
+# a single enclosure this small the coupling is far worse than on a bigger
+# board. Send the mic to a *different* Sendspin player (or a group that
+# excludes this one), and play music to this board from somewhere else.
+# That split is also what makes it a real duplex test.
+#
+# Hardware revision C: battery powered, single RGB LED.
+# Board-specific pinouts are defined in the substitutions section.
+# Functional blocks are imported from /packages; the source role and the
+# microphone are inlined here on purpose, so this experiment cannot break
+# the shipping configs that share those packages - and because the shared
+# packages/microphone.yaml is pinned to the 16 kHz voice-assistant rate,
+# which the source role cannot use (see mic_sample_rate below).
+#
+# !! Requires ESPHome 2026.11.0 or later for the Sendspin source role.
+#    Until that release ships, build against the ESPHome `beta` channel. !!
+# ============================================================
+
+substitutions:
+  # Deliberately not `echo-solo`: the node name differs from the shipping
+  # configs so this experiment can run next to a production board on the
+  # same network without colliding in mDNS or Home Assistant.
+  name: echo-solo-duplex
+  friendly_name: Esparagus-Echo-Solo Duplex
+  task_stack_in_psram: "true"
+
+  # Keep the product name in what the Sendspin server is told, so the
+  # device still identifies as the board it is.
+  sendspin_model: Esparagus-Echo-Solo
+
+  # ===== Board-Specific Pinouts =====
+  # I2S audio output pins (dual MAX98357A)
+  i2s_lrclk_pin: GPIO8
+  i2s_bclk_pin: GPIO18
+  i2s_dout_pin: GPIO17
+
+  # I2S audio input pins (onboard microphone). A second I2S bus: the
+  # ESP32-S3 has two peripherals, one drives the DACs, one clocks the mic.
+  i2s_mic_lrclk_pin: GPIO7
+  i2s_mic_bclk_pin: GPIO16
+  i2s_mic_din_pin: GPIO15
+  # The onboard mic is a TDK ICS-43434 (rev-C BOM, U4, the RIGHT-strapped
+  # variant): a true I2S mic, so `pdm: false` below. It drives audio into
+  # one half of the frame only - the one its L/R strap pin selects - and
+  # tri-states the data line for the other half. Read the wrong half and
+  # every bit comes off a floating line, which sounds like loud static no
+  # matter what the mic hears. If this value is wrong, that is the
+  # symptom; the other one is the fix.
+  i2s_mic_channel: right
+
+  # ===== Microphone / Source Tuning =====
+  # The source role cannot resample, so whatever the mic captures at is
+  # what goes on the wire. 48 kHz matches the playback side and needs no
+  # resampling in the server.
+  # Do not drop this to 16000 the way packages/microphone.yaml does for
+  # voice assist: the ICS-43434 needs a 64 x fs bit clock and is specified
+  # from 23 kHz to 51.6 kHz, so a voice-rate capture runs the mic out of
+  # spec. 32000 is the lowest sane step.
+  mic_sample_rate: "48000"
+  # I2S slot width the mic drives. MEMS mics put 24 bits in a 32-bit slot.
+  mic_bits_per_sample: "32"
+  # What the source puts on the wire. 16-bit halves the LAN traffic; the
+  # mic still captures at its own width and the source converts.
+  source_bits_per_sample: "16"
+  # Integer multiplier (1..64) applied before sending. A MEMS mic lands
+  # near the top of a 32-bit word, so after the conversion to 16 bits it
+  # is quiet. 64 is the starting point carried over from the ICS-43432 on
+  # Louder-ESP32-Pro; the gain saturates at full scale rather than
+  # wrapping, so overshooting clips loud passages instead of turning them
+  # into noise. Back it off if the mic clips on normal room noise.
+  source_gain_factor: "32"
+
+  # DAC enable pin. Starts off and is switched on by
+  # sendspin-addon-dac-enable.yaml when playback begins, so the amps stay
+  # quiet (and off the battery) while only the mic source is running.
+  dac_enable_pin: GPIO9
+  dac_enable_restore_mode: ALWAYS_OFF
+
+  # RGB LED
+  rgb_led_pin: GPIO10
+  num_leds: 1
+
+  # Battery & power sensing
+  # NOTE: rev C routes the divider to GPIO42, which has no ADC on the ESP32-S3
+  # (ADC1 is GPIO1-10, ADC2 GPIO11-20). GPIO4 keeps the config buildable; the
+  # readings are meaningless until the divider moves to an ADC pin in rev D.
+  battery_adc_pin: GPIO4         # ADC via 1:3 voltage divider
+  battery_divider_ratio: "3.0"
+  ext_power_pin: GPIO41          # open drain, active low
+  charging_pin: GPIO40           # open drain, active low
+
+  # Physical button (top side)
+  button_pin: GPIO0
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  min_version: 2026.11.0
+  name_add_mac_suffix: false
+
+esp32:
+  variant: ESP32S3
+  flash_size: 8MB
+  flash_mode: dio
+  cpu_frequency: 240MHz
+  framework:
+    type: esp-idf
+    version: recommended
+    advanced:
+      # Keep only the generic SPI flash driver. ESP-IDF otherwise links one
+      # driver per vendor (gd, issi, mxic, winbond, boya, th) and uses just the
+      # one matching the flash ID, so the rest are idle: ~1KB IRAM on the ESP32,
+      # ~2-3KB on the ESP32-S3, plus 124B DRAM each. Safe here because every
+      # board runs flash in dio mode, where the generic driver handles any chip;
+      # the vendor drivers only matter for qio/qout or flash above 16MB.
+      flash_chip: generic
+    sdkconfig_options:
+      CONFIG_ESP32S3_DATA_CACHE_64KB: "y"
+      CONFIG_ESP32S3_DATA_CACHE_LINE_64B: "y"
+      CONFIG_ESP32S3_INSTRUCTION_CACHE_32KB: "y"
+
+      # Moves instructions and read only data from flash into PSRAM on boot.
+      # Both enabled allows instructions to execute while a flash operation is in progress
+      # without needing to be placed in IRAM.
+      CONFIG_SPIRAM_RODATA: "y"
+      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
+
+      CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC: "y"
+      CONFIG_MBEDTLS_SSL_PROTO_TLS1_3: "y"
+
+      # Streaming both ways at once doubles the pressure on the network
+      # stack, so the buffer sizes from the voice-assist config are used
+      # here too. These are the first knobs to look at if the capture
+      # stream stutters while playback is running.
+      CONFIG_ESP32_WIFI_STATIC_RX_BUFFER_NUM: "16"
+      CONFIG_ESP32_WIFI_DYNAMIC_RX_BUFFER_NUM: "32"
+      CONFIG_TCPIP_RECVMBOX_SIZE: "512"
+      CONFIG_TCP_SND_BUF_DEFAULT: "65535"
+      CONFIG_TCP_WND_DEFAULT: "512000"
+      CONFIG_TCP_RECVMBOX_SIZE: "512"
+
+      # Both cores stay available: the player and the source each run their
+      # own task, and a unicore build would serialize them.
+      CONFIG_FREERTOS_UNICORE: "n"
+      # Generous watchdog: a debug build with DEBUG logging enabled can
+      # block the loop long enough to trip the default 5s.
+      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "10"
+
+logger:
+  # Compiled with DEBUG so the "Log Level" select can raise it at runtime;
+  # starts at INFO on every boot.
+  level: DEBUG
+  initial_level: INFO
+
+api:
+  # Don't reboot when no Home Assistant client is connected: players and
+  # sources used only with Music Assistant (Sendspin) never have one.
+  reboot_timeout: 0s
+
+ota:
+  platform: esphome
+  password: !secret esphome_ota_password
+
+wifi:
+  ssid: !secret esphome_wifi_ssid
+  password: !secret esphome_wifi_password
+
+psram:
+  mode: octal
+  speed: 80MHz
+  ignore_not_found: false
+
+network:
+  enable_ipv6: true
+
+# ===== Packages =====
+packages:
+  esparagus_remote:
+    url: https://github.com/sonocotta/esparagus-media-center
+    ref: main
+    files:
+      - firmware/esphome/packages/dac-switch.yaml
+      - firmware/esphome/packages/light.yaml
+      - firmware/esphome/packages/monitoring.yaml
+      - firmware/esphome/packages/monitoring-wifi.yaml
+
+  esparagus_echo:
+    url: https://github.com/sonocotta/esparagus-echo
+    ref: main
+    files:
+      # Playback side: I2S out, mixer, resampler, and the Sendspin player
+      # role (which also declares the `sendspin:` hub this file extends).
+      - firmware/esphome/packages/audio.yaml
+      - firmware/esphome/packages/sendspin.yaml
+      - firmware/esphome/packages/sendspin-addon-dac-enable.yaml
+      - firmware/esphome/packages/sendspin-addon-button.yaml
+      - firmware/esphome/packages/battery.yaml
+
+      # Left out on purpose: packages/microphone-i2s.yaml and
+      # packages/microphone.yaml build the 16 kHz voice-assistant mic, and
+      # the source role needs a single 48 kHz rate. The capture side is
+      # inlined at the end of this file instead.
+      # - firmware/esphome/packages/microphone-i2s.yaml
+      # - firmware/esphome/packages/microphone.yaml
+
+  # # Debug/local development fallback:
+  # audio: !include packages/audio.yaml
+  # battery: !include packages/battery.yaml
+  # sendspin: !include packages/sendspin.yaml
+  # sendspin_addon_dac_enable: !include packages/sendspin-addon-dac-enable.yaml
+  # sendspin_addon_button: !include packages/sendspin-addon-button.yaml
+
+# ============================================================
+# Capture side - inlined, not a package
+# ============================================================
+# Second I2S bus for the onboard microphone. `i2s_out` in audio.yaml is
+# the playback bus; ESPHome merges the two list entries, so the S3 ends up
+# with one peripheral per direction.
+i2s_audio:
+  - id: i2s_mic_bus
+    i2s_bclk_pin: ${i2s_mic_bclk_pin}
+    i2s_lrclk_pin: ${i2s_mic_lrclk_pin}
+
+microphone:
+  - platform: i2s_audio
+    id: onboard_mic
+    i2s_audio_id: i2s_mic_bus
+    i2s_din_pin: ${i2s_mic_din_pin}
+    adc_type: external
+    pdm: false
+    i2s_mode: primary
+    # One channel, so the source streams mono. `stereo` would need
+    # `channels: [0, 1]` below and a second mic on the other half of the
+    # frame, which this board does not have.
+    channel: ${i2s_mic_channel}
+    # A single sample rate (min == max) is required by the sendspin source
+    sample_rate: ${mic_sample_rate}
+    bits_per_sample: ${mic_bits_per_sample}bit
+    # Kept from packages/microphone.yaml, where it is what the voice
+    # assistant runs with on this board: the playback bus does not use the
+    # APLL, so the single APLL is free for the capture clock. Turn it off
+    # first if the two buses interfere.
+    use_apll: true
+
+sendspin:
+  # Merged into the `sendspin:` block from packages/sendspin.yaml - that
+  # package brings the hub and the player role, this adds the source role
+  # to the same hub, so both are advertised to the server.
+  source:
+    microphone:
+      microphone: onboard_mic
+      # Which channels of the mic stream to send. Not a substitution:
+      # ESPHome substitutes text, so the list has to stay a list.
+      channels: [0]
+      bits_per_sample: ${source_bits_per_sample}
+      gain_factor: ${source_gain_factor}
+    task_stack_in_psram: ${task_stack_in_psram}
+    # Logged at INFO so the start and end of a capture session show up
+    # without turning on DEBUG for everything.
+    on_streaming_started:
+      - logger.log:
+          level: INFO
+          format: "Sendspin source: capture started"
+    on_streaming_stopped:
+      - logger.log:
+          level: INFO
+          format: "Sendspin source: capture stopped"
+
+binary_sensor:
+  # On while the server is actually pulling audio from the mic. Read from
+  # the hub each loop rather than latched by the callbacks above, so it is
+  # still right after a reconnect.
+  - platform: template
+    name: Mic Source Streaming
+    id: mic_source_streaming
+    icon: mdi:broadcast
+    lambda: return id(sendspin_hub)->is_source_streaming();
+
+switch:
+  # Tells the server whether the source has anything worth playing. A mic
+  # always does, so this starts on; turn it off to see how the server
+  # reacts to a source going quiet.
+  - platform: template
+    name: Mic Signal
+    id: mic_signal
+    icon: mdi:waveform
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    turn_on_action:
+      - sendspin.source.set_signal:
+          present: true
+    turn_off_action:
+      - sendspin.source.set_signal:
+          present: false
+
+  # Mutes the mic in the driver while the stream keeps running, which
+  # separates "the capture path is dead" from "the mic hears nothing" -
+  # and breaks an acoustic feedback loop without stopping the test.
+  - platform: template
+    name: Mic Mute
+    id: mic_mute
+    icon: mdi:microphone-off
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    turn_on_action:
+      - microphone.mute: onboard_mic
+    turn_off_action:
+      - microphone.unmute: onboard_mic
+
+  # Lets a server connect without pairing at all, matching the shipping
+  # configs: a fresh board shows up in Music Assistant with no ceremony.
+  - platform: sendspin
+    type: unpaired_access
+    name: Unpaired Access
+    icon: mdi:account-key
+    restore_mode: RESTORE_DEFAULT_ON
