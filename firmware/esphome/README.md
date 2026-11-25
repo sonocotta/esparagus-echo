@@ -6,6 +6,7 @@ ESPHome configurations for the Esparagus Echo boards. There is a folder per boar
 
 - [Which folder do I need](#which-folder-do-i-need)
 - [Which config do I need](#which-config-do-i-need)
+- [Duplex experiment: player and source on one board](#duplex-experiment-player-and-source-on-one-board)
 - [Packages](#packages)
 - [Pairing with Music Assistant](#pairing-with-music-assistant)
 - [Building and flashing](#building-and-flashing)
@@ -32,8 +33,74 @@ Solo C1 is a drop-in replacement for the board inside an IKEA KALLSUP Bluetooth 
 | `*-media-player.yaml` | Plain Home Assistant media player |
 | `*-snapclient.yaml` | Snapcast client |
 | `*-snapclient-with-dsp.yaml` | Snapcast client with DSP controls |
+| `*-sendspin-duplex.yaml` | ⚠️ **Experimental/debug.** Sendspin player *and* Sendspin source on one hub: the usual playback, plus the onboard microphone streamed into Music Assistant as an input |
 
-Not every revision has every config. Rev C ships `sendspin`, `voice-assist-sendspin` and `snapclient`.
+Not every revision has every config. Rev C ships `sendspin`, `voice-assist-sendspin` and `snapclient`, plus the experimental `sendspin-duplex`.
+
+## Duplex experiment: player and source on one board
+
+Every Echo has both a DAC and a microphone on it, which makes it a place to
+answer two open questions: how the onboard mic sounds as a Sendspin *source*,
+and whether a single ESP32-S3 has the CPU, PSRAM and WiFi headroom to stream
+audio both ways at once. `echo-solo-c/echo-solo-c-idf-sendspin-duplex.yaml` is
+that test bench, not a product configuration.
+
+It takes the player side unchanged from `echo-solo-c-idf-sendspin.yaml` (the
+`audio.yaml` + `sendspin.yaml` + button and DAC-enable addon stack) and adds a
+second I2S bus for the microphone plus a `source:` block on the same `sendspin:`
+hub. Music Assistant then sees one device it can both play to and pull from.
+The capture side is inlined in the config rather than packaged, so the
+experiment cannot break the shipping configs — and because `microphone.yaml` is
+pinned to the 16 kHz voice-assistant rate, which the source role cannot use.
+
+Extra entities beyond the usual Sendspin player set:
+
+| Entity | What it does |
+| --- | --- |
+| **Mic Source Streaming** (binary sensor) | On while the server is actually pulling audio from the mic. Read from the hub, so it stays right across reconnects. |
+| **Mic Signal** (switch) | The source's "something is playing here" hint to the server. Starts on; turn it off to see how the server handles a source going quiet. |
+| **Mic Mute** (switch) | Mutes the mic in the driver while the stream keeps running — separates a dead capture path from a mic that hears nothing, and breaks a feedback loop without ending the test. |
+
+Notes for whoever runs it:
+
+- **Don't route the mic to this board's own player.** The speaker feeds straight
+  back into the mic, and in an enclosure this small the coupling is far worse
+  than on a larger board. Send the mic to a *different* player (or a group that
+  excludes this one) and play music to this board from elsewhere — which is also
+  what makes it a genuine duplex test rather than a loopback.
+- **Node name is `echo-solo-duplex`**, not `echo-solo`, so the experiment can run
+  next to a production board without colliding in mDNS or Home Assistant. The
+  model reported to the server is still `Esparagus-Echo-Solo`.
+- **Watch the diagnostics** while both directions run: Loop Time, Heap Free,
+  Heap Max Block, Free PSRAM and CPU Temperature. They ship
+  `disabled_by_default`, so enable them on the device page — no reflash needed.
+  Battery Voltage and Battery Level are worth watching too: duplex streaming is
+  the heaviest load this board can run, so it doubles as a worst-case runtime
+  test.
+- **Knobs in `substitutions:`** if it runs out of road: `source_bits_per_sample`
+  and `source_gain_factor` (a MEMS mic is quiet once converted down to 16 bits;
+  it starts at 64, carried over from the ICS-43432 on Louder-ESP32-Pro and
+  untuned on this mic, so back it off if the mic clips on normal room noise).
+  `mic_sample_rate` is 48000 and should not drop to the voice rate to save CPU —
+  the onboard ICS-43434 needs a 64 × fs bit clock and is specified from 23 kHz
+  to 51.6 kHz, so 32000 is the lowest sane step. The WiFi and TCP buffer sizes
+  in `sdkconfig_options` are the next thing to look at if capture stutters while
+  playback runs.
+- **Static instead of audio** means the wrong half of the I2S frame is being
+  read: the ICS-43434 drives only the half its L/R strap selects and tri-states
+  the data line for the other, so a floating line arrives as noise. Flip
+  `i2s_mic_channel` between `right` (current, and what the rev-C BOM straps) and
+  `left`. `Mic Mute` silencing the static is not evidence against this — muting
+  happens in the driver, after the read.
+- **`use_apll: true` is kept** from `microphone.yaml`, since the playback bus does
+  not use the APLL and there is one to share. It is the first thing to turn off
+  if the two buses interfere.
+- **Requires ESPHome 2026.11.0 or later** for the source role. Until that release
+  ships, build against the ESPHome `beta` channel.
+
+Louder-ESP32-Pro has the same experiment in
+[its own repository](https://github.com/sonocotta/esp32-audio-dock/blob/main/firmware/esphome/10-louder-esp32-pro/louder-esp32-s3-pro-idf-sendspin-duplex.yaml),
+which is where this config came from.
 
 ## Packages
 
